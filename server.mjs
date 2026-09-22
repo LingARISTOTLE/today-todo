@@ -25,6 +25,7 @@ const MIME = {
 function defaultState() {
   return {
     tasks: [],
+    goals: [],
     settings: { base: 'https://api.deepseek.com/v1', key: '', model: 'deepseek-chat' }
   };
 }
@@ -33,6 +34,7 @@ function load() {
   try {
     const d = JSON.parse(readFileSync(DATA_FILE, 'utf8'));
     d.tasks = Array.isArray(d.tasks) ? d.tasks : [];
+    d.goals = Array.isArray(d.goals) ? d.goals : [];
     return d;
   } catch (e) {
     return defaultState();
@@ -57,7 +59,35 @@ const server = createServer((req, res) => {
         try {
           const d = JSON.parse(body);
           if (!d || typeof d !== 'object') throw new Error('bad body');
+          d.goals = load().goals || []; // 今日待办页面不管理 goals，避免覆盖丢失
           save(d);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end('{"ok":true}');
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end('{"ok":false}');
+        }
+      });
+    } else {
+      res.writeHead(405); res.end();
+    }
+    return;
+  }
+
+  if (path === '/api/goals') {
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ goals: load().goals || [] }));
+    } else if (req.method === 'POST') {
+      let body = '';
+      req.on('data', (c) => { body += c; if (body.length > 5e6) req.destroy(); });
+      req.on('end', () => {
+        try {
+          const d = JSON.parse(body);
+          if (!d || typeof d !== 'object') throw new Error('bad body');
+          const existing = load();
+          existing.goals = Array.isArray(d.goals) ? d.goals : [];
+          save(existing);
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end('{"ok":true}');
         } catch (e) {
@@ -101,7 +131,7 @@ const server = createServer((req, res) => {
   }
 
   // 静态文件
-  const rel = path === '/' ? '/index.html' : path;
+  const rel = path === '/' ? '/index.html' : (path === '/goals' ? '/goals.html' : path);
   const fp = join(__dirname, rel);
   if (!fp.startsWith(__dirname)) { res.writeHead(403); res.end('forbidden'); return; }
   if (!existsSync(fp)) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('404 not found'); return; }

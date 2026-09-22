@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中期目标 · 今日待办</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --bg-glow: rgba(91, 91, 214, .07);
+    --card: #ffffff;
+    --text: #171922;
+    --text-2: #454b5a;
+    --muted: #9298a8;
+    --border: #eceef4;
+    --border-strong: #dfe3ed;
+    --accent: #5b5bd6;
+    --accent-2: #8b5cf6;
+    --accent-soft: rgba(91, 91, 214, .10);
+    --danger: #e5484d;
+    --danger-soft: rgba(229, 72, 77, .10);
+    --warn: #e8850c;
+    --warn-soft: rgba(232, 133, 12, .12);
+    --ok: #22a06b;
+    --ok-soft: rgba(34, 160, 107, .12);
+    --shadow-sm: 0 1px 2px rgba(16, 18, 27, .05);
+    --shadow-md: 0 2px 6px rgba(16, 18, 27, .05), 0 20px 44px -24px rgba(16, 18, 27, .18);
+  }
+  html[data-theme="dark"] {
+    --bg: #0b0c11;
+    --bg-glow: rgba(125, 132, 246, .13);
+    --card: #16171f;
+    --text: #ecedf3;
+    --text-2: #c3c8d5;
+    --muted: #6e7486;
+    --border: #262a38;
+    --border-strong: #333848;
+    --accent: #7d84f6;
+    --accent-2: #a78bfa;
+    --accent-soft: rgba(125, 132, 246, .14);
+    --danger: #f26d6f;
+    --danger-soft: rgba(242, 109, 111, .14);
+    --warn: #f3a83d;
+    --warn-soft: rgba(243, 168, 61, .14);
+    --ok: #43c184;
+    --ok-soft: rgba(67, 193, 132, .14);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, .35);
+    --shadow-md: 0 2px 6px rgba(0, 0, 0, .4), 0 20px 44px -24px rgba(0, 0, 0, .65);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(1200px 480px at 50% -160px, var(--bg-glow), transparent 70%),
+      var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+      "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    transition: background .25s, color .25s;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 20px 100px; }
+
+  .topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+  .back { color: var(--muted); text-decoration: none; font-size: 13px; }
+  .back:hover { color: var(--accent); }
+  h1 { font-size: 30px; font-weight: 780; letter-spacing: -.03em; margin: 4px 0 0; line-height: 1.05; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 7px; }
+  .toolbar { display: flex; gap: 2px; }
+  .icon-btn {
+    border: 0; background: transparent; color: var(--muted);
+    width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 17px;
+    transition: background .16s, color .16s; padding: 0;
+  }
+  .icon-btn:hover { background: var(--border); color: var(--text); }
+
+  .quarterbar {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 10px 14px; box-shadow: var(--shadow-sm); margin-bottom: 18px;
+  }
+  .qbtn {
+    border: 1px solid var(--border); background: transparent; color: var(--text);
+    width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font-size: 16px;
+    transition: background .15s;
+  }
+  .qbtn:hover { background: var(--border); }
+  .qbtn.qtoday { width: auto; padding: 0 12px; font-size: 13px; color: var(--muted); }
+  .qinfo { flex: 1; text-align: center; }
+  .q-title { font-size: 17px; font-weight: 720; letter-spacing: -.01em; }
+  .q-range { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .addbtn {
+    border: 0; background: var(--accent); color: #fff; cursor: pointer;
+    height: 34px; padding: 0 16px; border-radius: 9px; font-size: 14px; font-weight: 650;
+    transition: filter .15s, transform .1s;
+  }
+  .addbtn:hover { filter: brightness(1.08); }
+  .addbtn:active { transform: scale(.97); }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .cols { grid-template-columns: 1fr; } }
+
+  .dim-col {
+    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+    padding: 16px; box-shadow: var(--shadow-sm);
+  }
+  .dim-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .dim-name { font-size: 16px; font-weight: 750; display: flex; align-items: center; gap: 8px; }
+  .dim-dot { width: 9px; height: 9px; border-radius: 50%; }
+  .dim-内功 .dim-dot { background: var(--accent); }
+  .dim-战功 .dim-dot { background: var(--warn); }
+  .dim-progress { font-size: 12px; color: var(--muted); }
+  .dim-progress b { color: var(--ok); font-weight: 700; }
+
+  .cat { margin-bottom: 14px; }
+  .cat:last-child { margin-bottom: 0; }
+  .cat-name {
+    font-size: 12px; color: var(--muted); font-weight: 650; letter-spacing: .02em;
+    margin: 0 0 7px; text-transform: none;
+  }
+  .goal {
+    display: flex; flex-direction: column; gap: 5px;
+    border: 1px solid var(--border); border-radius: 11px; padding: 10px 12px;
+    margin-bottom: 8px; background: var(--bg); transition: border-color .15s;
+  }
+  .goal:hover { border-color: var(--border-strong); }
+  .goal .row1 { display: flex; align-items: center; gap: 8px; }
+  .goal .title { flex: 1; font-size: 14px; font-weight: 600; line-height: 1.35; }
+  .goal.done .title { color: var(--muted); text-decoration: line-through; }
+  .status {
+    border: 0; border-radius: 6px; font-size: 11px; padding: 2px 7px; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0; font-weight: 650;
+  }
+  .status.todo { color: var(--muted); background: var(--border); }
+  .status.doing { color: var(--warn); background: var(--warn-soft); }
+  .status.done { color: var(--ok); background: var(--ok-soft); }
+  .goal .link { font-size: 12px; color: var(--accent); text-decoration: none; }
+  .goal .link:hover { text-decoration: underline; }
+  .goal .note { font-size: 12px; color: var(--muted); }
+  .goal .docs { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
+  .goal .doclink { font-size: 12px; color: var(--text-2); text-decoration: none; line-height: 1.45; }
+  .goal .doclink:hover { color: var(--accent); }
+  .goal .doclink::before { content: '· '; color: var(--muted); }
+  .goal .acts { display: flex; gap: 6px; }
+  .goal .acts button {
+    border: 0; background: transparent; color: var(--muted); cursor: pointer;
+    font-size: 12px; padding: 2px 4px; border-radius: 5px;
+  }
+  .goal .acts button:hover { background: var(--border); color: var(--text); }
+  .goal .acts .del:hover { color: var(--danger); }
+  .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 26px 0; }
+
+  /* modal */
+  .mask {
+    position: fixed; inset: 0; background: rgba(5, 6, 12, .5); backdrop-filter: blur(2px);
+    display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50;
+  }
+  .mask[hidden] { display: none; }
+  .form {
+    width: 100%; max-width: 440px; background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 12px;
+    max-height: 90vh; overflow: auto;
+  }
+  .form h3 { margin: 0 0 4px; font-size: 17px; }
+  .form label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; color: var(--muted); }
+  .form input, .form select, .form textarea {
+    background: var(--bg); border: 1px solid var(--border-strong); border-radius: 9px;
+    color: var(--text); padding: 8px 10px; font-size: 14px; font-family: inherit;
+  }
+  .form input:focus, .form select:focus, .form textarea:focus { outline: none; border-color: var(--accent); }
+  .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+  .form-actions button { border-radius: 9px; cursor: pointer; font-size: 14px; padding: 8px 16px; border: 0; }
+  .form-actions .ghost { background: transparent; border: 1px solid var(--border-strong); color: var(--text); }
+  .form-actions .primary { background: var(--accent); color: #fff; font-weight: 650; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div>
+      <a class="back" href="/">← 今日待办</a>
+      <h1>中期目标</h1>
+      <div class="sub">内功（能力）· 战功（交付）—— 按季度记录</div>
+    </div>
+    <div class="toolbar">
+      <button class="icon-btn" id="themeBtn" title="切换主题">🌓</button>
+    </div>
+  </header>
+
+  <div class="quarterbar">
+    <button class="qbtn" id="qPrev" title="上一季度">‹</button>
+    <div class="qinfo">
+      <div class="q-title" id="qTitle">—</div>
+      <div class="q-range" id="qRange">—</div>
+    </div>
+    <button class="qbtn" id="qNext" title="下一季度">›</button>
+    <button class="qbtn qtoday" id="qToday">本季度</button>
+    <button class="addbtn" id="addBtn">＋ 添加</button>
+  </div>
+
+  <main class="cols" id="cols"></main>
+</div>
+
+<div class="mask" id="mask" hidden>
+  <form class="form" id="form">
+    <h3 id="formTitle">添加目标</h3>
+    <label>维度
+      <select id="fDim"><option value="内功">内功</option><option value="战功">战功</option></select>
+    </label>
+    <label>类别
+      <input id="fCat" list="catList" placeholder="书籍阅读 / 项目交付 / …">
+      <datalist id="catList"><option value="书籍阅读"></option><option value="项目交付"></option></datalist>
+    </label>
+    <label>标题
+      <input id="fTitle" placeholder="目标 / 条目名称">
+    </label>
+    <label>飞书文档链接
+      <input id="fLink" placeholder="https://…feishu.cn/…（读书笔记 / 方案）">
+    </label>
+    <label>状态
+      <select id="fStatus">
+        <option value="todo">未开始</option>
+        <option value="doing">进行中</option>
+        <option value="done">已完成</option>
+      </select>
+    </label>
+    <label>备注
+      <textarea id="fNote" rows="3" placeholder="可选"></textarea>
+    </label>
+    <div class="form-actions">
+      <button type="button" class="ghost" id="fCancel">取消</button>
+      <button type="submit" class="primary" id="fSave">保存</button>
+    </div>
+  </form>
+</div>
+
+<script>
+(function () {
+  var DIMS = ['内功', '战功'];
+  var STATUS = { todo: '未开始', doing: '进行中', done: '已完成' };
+  var THEME_KEY = 'today-todo-theme';
+  var state = { goals: [], quarter: '', editingId: null };
+
+  var $ = function (s) { return document.querySelector(s); };
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function uid() { return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+  /* ---- quarter ---- */
+  function qParts(q) {
+    var m = /^(\d{4})-Q([1-4])$/.exec(q);
+    return m ? { y: +m[1], q: +m[2] } : null;
+  }
+  function qStr(y, q) { return y + '-Q' + q; }
+  function currentQuarter() {
+    var d = new Date();
+    return qStr(d.getFullYear(), Math.ceil((d.getMonth() + 1) / 3));
+  }
+  function shiftQuarter(q, delta) {
+    var p = qParts(q) || qParts(currentQuarter());
+    var idx = p.y * 4 + (p.q - 1) + delta;
+    return qStr(Math.floor(idx / 4), (idx % 4) + 1);
+  }
+  function quarterRange(q) {
+    var p = qParts(q);
+    var start = (p.q - 1) * 3 + 1;
+    return p.y + ' 年 ' + start + ' 月 - ' + (start + 2) + ' 月';
+  }
+
+  /* ---- data ---- */
+  function loadGoals() {
+    fetch('/api/goals', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('no'); return r.json(); })
+      .then(function (d) {
+        state.goals = Array.isArray(d.goals) ? d.goals : [];
+        render();
+      })
+      .catch(function () { state.goals = []; render(); });
+  }
+  function saveGoals() {
+    fetch('/api/goals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ goals: state.goals })
+    }).catch(function () {});
+  }
+
+  /* ---- render ---- */
+  function goalsInQuarter() {
+    return state.goals.filter(function (g) { return g.quarter === state.quarter; });
+  }
+  function groupByCat(dim) {
+    var items = goalsInQuarter().filter(function (g) { return g.dimension === dim; });
+    items.sort(function (a, b) {
+      var o = { todo: 0, doing: 1, done: 2 };
+      return (o[a.status] || 0) - (o[b.status] || 0) || (a.createdAt < b.createdAt ? -1 : 1);
+    });
+    var map = {};
+    items.forEach(function (g) {
+      var c = g.category || '其他';
+      (map[c] = map[c] || []).push(g);
+    });
+    return map;
+  }
+  function goalHtml(g) {
+    return '<div class="goal ' + esc(g.status || 'todo') + '" data-id="' + esc(g.id) + '">' +
+      '<div class="row1">' +
+        '<button class="status ' + esc(g.status || 'todo') + '" data-act="status" title="点击切换状态">' + esc(STATUS[g.status] || g.status) + '</button>' +
+        '<span class="title">' + esc(g.title) + '</span>' +
+      '</div>' +
+      (g.link ? '<a class="link" href="' + esc(g.link) + '" target="_blank" rel="noopener">📄 打开文档 ↗</a>' : '') +
+      (g.docs && g.docs.length ? '<div class="docs">' + g.docs.map(function (d) {
+        return '<a class="doclink" href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.title) + '</a>';
+      }).join('') + '</div>' : '') +
+      (g.note ? '<div class="note">' + esc(g.note) + '</div>' : '') +
+      '<div class="acts">' +
+        '<button data-act="edit">编辑</button>' +
+        '<button data-act="del" class="del">删除</button>' +
+      '</div>' +
+    '</div>';
+  }
+  function dimHtml(dim) {
+    var map = groupByCat(dim);
+    var cats = Object.keys(map);
+    var items = goalsInQuarter().filter(function (g) { return g.dimension === dim; });
+    var done = items.filter(function (g) { return g.status === 'done'; }).length;
+    var html = '<div class="dim-col dim-' + dim + '">' +
+      '<div class="dim-head"><div class="dim-name"><span class="dim-dot"></span>' + dim + '</div>' +
+      '<div class="dim-progress">' + done + '/' + items.length + ' 完成</div></div>';
+    if (!cats.length) {
+      html += '<div class="empty">本季度暂无「' + dim + '」目标</div>';
+    } else {
+      cats.forEach(function (c) {
+        html += '<div class="cat"><div class="cat-name">' + esc(c) + '</div>' +
+          map[c].map(goalHtml).join('') + '</div>';
+      });
+    }
+    html += '</div>';
+    return html;
+  }
+  function render() {
+    var p = qParts(state.quarter);
+    $('#qTitle').textContent = p.y + ' · Q' + p.q;
+    $('#qRange').textContent = quarterRange(state.quarter);
+    $('#cols').innerHTML = DIMS.map(dimHtml).join('');
+  }
+
+  /* ---- actions ---- */
+  function cycleStatus(id) {
+    var g = state.goals.find(function (x) { return x.id === id; });
+    if (!g) return;
+    var order = ['todo', 'doing', 'done'];
+    var i = order.indexOf(g.status);
+    g.status = order[(i + 1) % order.length];
+    saveGoals(); render();
+  }
+  function openForm(id) {
+    state.editingId = id || null;
+    $('#formTitle').textContent = id ? '编辑目标' : '添加目标';
+    var g = id ? state.goals.find(function (x) { return x.id === id; }) : null;
+    $('#fDim').value = g ? (g.dimension || '内功') : '内功';
+    $('#fCat').value = g ? (g.category || '') : '';
+    $('#fTitle').value = g ? (g.title || '') : '';
+    $('#fLink').value = g ? (g.link || '') : '';
+    $('#fStatus').value = g ? (g.status || 'todo') : 'todo';
+    $('#fNote').value = g ? (g.note || '') : '';
+    $('#mask').hidden = false;
+    $('#fTitle').focus();
+  }
+  function closeForm() { $('#mask').hidden = true; state.editingId = null; }
+  function submitForm(e) {
+    e.preventDefault();
+    var title = $('#fTitle').value.trim();
+    if (!title) { $('#fTitle').focus(); return; }
+    var dim = $('#fDim').value || '内功';
+    var cat = $('#fCat').value.trim();
+    var data = {
+      dimension: dim,
+      category: cat,
+      title: title,
+      link: $('#fLink').value.trim(),
+      status: $('#fStatus').value || 'todo',
+      note: $('#fNote').value.trim()
+    };
+    if (state.editingId) {
+      var g = state.goals.find(function (x) { return x.id === state.editingId; });
+      if (g) Object.assign(g, data);
+    } else {
+      state.goals.push(Object.assign({
+        id: uid(), quarter: state.quarter, createdAt: new Date().toISOString()
+      }, data));
+    }
+    saveGoals(); render(); closeForm();
+  }
+  function delGoal(id) {
+    state.goals = state.goals.filter(function (x) { return x.id !== id; });
+    saveGoals(); render();
+  }
+
+  /* ---- theme ---- */
+  function applyTheme() {
+    var t = null;
+    try { t = localStorage.getItem(THEME_KEY); } catch (e) {}
+    if (!t && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) t = 'dark';
+    document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+  }
+  function toggleTheme() {
+    var cur = document.documentElement.getAttribute('data-theme');
+    var next = cur === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+  }
+
+  /* ---- events ---- */
+  function init() {
+    state.quarter = currentQuarter();
+    $('#qPrev').addEventListener('click', function () { state.quarter = shiftQuarter(state.quarter, -1); render(); });
+    $('#qNext').addEventListener('click', function () { state.quarter = shiftQuarter(state.quarter, 1); render(); });
+    $('#qToday').addEventListener('click', function () { state.quarter = currentQuarter(); render(); });
+    $('#addBtn').addEventListener('click', function () { openForm(null); });
+    $('#themeBtn').addEventListener('click', toggleTheme);
+    $('#fCancel').addEventListener('click', closeForm);
+    $('#form').addEventListener('submit', submitForm);
+    $('#mask').addEventListener('click', function (e) { if (e.target === $('#mask')) closeForm(); });
+
+    $('#cols').addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-act]');
+      if (!btn) return;
+      var card = e.target.closest('.goal');
+      if (!card) return;
+      var id = card.getAttribute('data-id');
+      var act = btn.getAttribute('data-act');
+      if (act === 'status') cycleStatus(id);
+      else if (act === 'edit') openForm(id);
+      else if (act === 'del') { if (confirm('删除这条目标？')) delGoal(id); }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeForm();
+    });
+
+    applyTheme();
+    loadGoals();
+  }
+  init();
+})();
+</script>
+</body>
+</html>

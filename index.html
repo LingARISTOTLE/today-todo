@@ -249,6 +249,7 @@
   .tag.done-tag { color: var(--ok); border-color: transparent; background: var(--ok-soft); }
   .tag.proj { color: var(--proj); border-color: transparent; background: var(--proj-soft); }
   .tag.nature { color: var(--nature); border-color: transparent; background: var(--nature-soft); }
+  .tag.goal { color: var(--accent-2); border-color: transparent; background: var(--accent-soft); text-decoration: none; }
   .tag.due { color: var(--accent); border-color: transparent; background: var(--accent-soft); }
   .tag.due.overdue { color: var(--danger); background: var(--danger-soft); }
 
@@ -497,6 +498,10 @@
       <input id="editNature" type="text" list="naturesList" placeholder="探索类 / 交付类 / 学习类…" />
       <datalist id="naturesList"></datalist>
     </div>
+    <div class="field">
+      <label>关联中期目标</label>
+      <select id="editGoal"></select>
+    </div>
     <div class="modal-actions">
       <button class="btn" id="editCancel">取消</button>
       <button class="btn primary" id="editSave">保存</button>
@@ -594,6 +599,7 @@
 
   var state = {
     tasks: [],
+    goals: [],
     sortMode: 'priority', // priority | due | created | late | custom
     view: 'list',         // list | cal
     filter: 'all',        // all | open | today | late | done
@@ -622,6 +628,7 @@
     editTitle: $('#editTitle'), editProject: $('#editProject'),
     projectsList: $('#projectsList'), editDue: $('#editDue'),
     editPrio: $('#editPrio'), editNature: $('#editNature'), naturesList: $('#naturesList'),
+    editGoal: $('#editGoal'),
     settingsMask: $('#settingsMask'),
     cfgBase: $('#cfgBase'), cfgKey: $('#cfgKey'), cfgModel: $('#cfgModel')
   };
@@ -681,11 +688,13 @@
     if (typeof t.project !== 'string') t.project = '';
     if (typeof t.nature !== 'string') t.nature = '';
     if (typeof t.due !== 'string' || !t.due) t.due = t.createdDay || todayStr();
+    if (typeof t.goalId !== 'string') t.goalId = '';
     return t;
   }
   function applyState(d) {
     state.tasks = (Array.isArray(d.tasks) ? d.tasks : []).map(normalizeTask);
     monthCache = {}; // 数据刷新后清掉归档缓存，保证回读最新
+    state.goals = Array.isArray(d.goals) ? d.goals : [];
     if (d.settings) {
       Object.assign(state.settings, d.settings);
       if (!Array.isArray(state.settings.projects)) state.settings.projects = ['架构师Agent', 'MAF数据迁移', '稽查虾'];
@@ -889,6 +898,10 @@
     var chips = [];
     if (t.project) chips.push('<span class="tag proj">' + escapeHtml(t.project) + '</span>');
     if (t.nature) chips.push('<span class="tag nature">' + escapeHtml(t.nature) + '</span>');
+    if (t.goalId) {
+      var _g = state.goals.find(function (x) { return x.id === t.goalId; });
+      chips.push('<a class="tag goal" href="/goals" target="_blank" title="查看中期目标">🎯 ' + escapeHtml(_g ? _g.title : '目标') + '</a>');
+    }
     if (t.due) {
       var dueDiff = dayDiff(today, t.due);
       var dueCls = (!t.done && dueDiff < 0) ? 'tag due overdue' : 'tag due';
@@ -1041,16 +1054,26 @@
     el.projectsList.innerHTML = state.settings.projects.map(function (p) { return '<option value="' + escapeHtml(p) + '">'; }).join('');
     el.naturesList.innerHTML = state.settings.natures.map(function (n) { return '<option value="' + escapeHtml(n) + '">'; }).join('');
   }
+  function refreshGoalOptions() {
+    var opts = '<option value="">（不关联）</option>';
+    state.goals.forEach(function (g) {
+      opts += '<option value="' + escapeHtml(g.id) + '">' + escapeHtml(g.title) +
+        ' · ' + escapeHtml(g.dimension || '') + ' · ' + escapeHtml(g.quarter || '') + '</option>';
+    });
+    el.editGoal.innerHTML = opts;
+  }
   function openEdit(id) {
     var t = state.tasks.find(function (x) { return x.id === id; });
     if (!t) return;
     state.editingId = id;
     state.editingPrio = t.priority;
     refreshDatalists();
+    refreshGoalOptions();
     el.editTitle.value = t.title;
     el.editProject.value = t.project || '';
     el.editDue.value = t.due || '';
     el.editNature.value = t.nature || '';
+    el.editGoal.value = t.goalId || '';
     syncPrioButtons();
     el.editMask.classList.add('show');
   }
@@ -1068,6 +1091,7 @@
     t.nature = el.editNature.value.trim();
     t.due = el.editDue.value || todayStr();
     t.priority = state.editingPrio;
+    t.goalId = el.editGoal.value || '';
     if (t.project && state.settings.projects.indexOf(t.project) < 0) state.settings.projects.push(t.project);
     if (t.nature && state.settings.natures.indexOf(t.nature) < 0) state.settings.natures.push(t.nature);
     save(); closeEdit(); render();

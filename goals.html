@@ -142,16 +142,33 @@
   .g-top { display: flex; align-items: center; gap: 10px; }
   .g-top .title { flex: 1; font-size: 14.5px; font-weight: 640; line-height: 1.35; }
   .goal.done .g-top .title { color: var(--muted); text-decoration: line-through; }
-  .status-sel {
-    border: 0; border-radius: 7px; font-size: 11px; padding: 3px 18px 3px 8px; cursor: pointer;
-    white-space: nowrap; flex-shrink: 0; font-weight: 680; letter-spacing: .01em;
-    font-family: inherit; line-height: 1.4; appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'%3E%3Cpath d='M1 1l3 3 3-3' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 6px center;
+  .status-pill {
+    border: 0; font-family: inherit; font-size: 11px; font-weight: 800; padding: 3px 9px;
+    border-radius: 999px; cursor: pointer; flex-shrink: 0; letter-spacing: .02em; line-height: 1;
+    white-space: nowrap; transition: transform .13s, filter .13s;
   }
-  .status-sel.todo { color: var(--muted); background-color: var(--border); }
-  .status-sel.doing { color: var(--warn); background-color: var(--warn-soft); }
-  .status-sel.done { color: var(--ok); background-color: var(--ok-soft); }
+  .status-pill:hover { transform: scale(1.08); filter: brightness(.97); }
+  .status-pill.todo { color: var(--muted); background: var(--border); }
+  .status-pill.doing { color: var(--warn); background: var(--warn-soft); }
+  .status-pill.done { color: var(--ok); background: var(--ok-soft); }
+  .status-pill .chev { font-style: normal; font-size: 9px; opacity: .65; margin-left: 1px; }
+  .status-menu {
+    position: fixed; z-index: 80; background: var(--card); border: 1px solid var(--border);
+    border-radius: 13px; box-shadow: var(--shadow-md); padding: 5px; min-width: 132px;
+    animation: pop .15s cubic-bezier(.22, 1, .36, 1);
+  }
+  .status-opt {
+    display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent;
+    font: inherit; font-size: 13.5px; padding: 8px 10px; border-radius: 9px; cursor: pointer; transition: .12s;
+  }
+  .status-opt:hover { background: var(--border); }
+  .status-opt .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .status-opt.doing .dot { background: var(--warn); }
+  .status-opt.done .dot { background: var(--ok); }
+  .status-opt b { font-weight: 600; color: var(--text); flex: 1; text-align: left; }
+  .status-opt .tick { color: var(--accent); font-weight: 700; font-size: 13px; opacity: 0; }
+  .status-opt.active .tick { opacity: 1; }
+  @keyframes pop { from { opacity: 0; transform: translateY(-5px) scale(.985); } to { opacity: 1; transform: none; } }
   .g-acts { display: flex; gap: 2px; flex-shrink: 0; }
   .g-acts button {
     border: 0; background: transparent; color: var(--muted); cursor: pointer;
@@ -210,8 +227,8 @@
   .book-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
   .book-sub a { color: var(--accent); text-decoration: none; }
   .book-sub a:hover { text-decoration: underline; }
-  .book-head .status-sel { flex-shrink: 0; }
-  .fold { color: var(--muted); font-size: 13px; flex-shrink: 0; margin-left: 2px; transition: transform .2s; }
+  .book-head .status-pill { flex-shrink: 0; }
+  .fold { font-style: normal; font-size: 9px; opacity: .65; display: inline-block; margin-left: 2px; transition: transform .2s; }
   .book.open .fold { transform: rotate(180deg); }
   .chapters { max-height: 0; overflow: hidden; transition: max-height .38s cubic-bezier(.4, 0, .2, 1); }
   .book.open .chapters { max-height: 900px; }
@@ -330,6 +347,12 @@
   </form>
 </div>
 
+<div class="status-menu" id="statusMenu" hidden>
+  <button class="status-opt todo" data-s="todo"><span class="dot"></span><b>未开始</b><span class="tick">✓</span></button>
+  <button class="status-opt doing" data-s="doing"><span class="dot"></span><b>进行中</b><span class="tick">✓</span></button>
+  <button class="status-opt done" data-s="done"><span class="dot"></span><b>已完成</b><span class="tick">✓</span></button>
+</div>
+
 <script>
 (function () {
   var DIMS = ['内功', '战功'];
@@ -408,7 +431,7 @@
     var docs = Array.isArray(g.docs) ? g.docs : [];
     return '<div class="goal ' + esc(g.status || 'todo') + (openIds[g.id] ? ' open' : '') + '" data-id="' + esc(g.id) + '">' +
       '<div class="g-top">' +
-        statusSelectHtml(g.status) +
+        statusPillHtml(g.status) +
         '<span class="title">' + esc(g.title) + '</span>' +
         '<div class="g-acts">' +
           '<button data-act="edit" title="编辑">编辑</button>' +
@@ -452,12 +475,11 @@
         '<div class="cover" style="background:' + COVERS[idx % COVERS.length] + '"><span>' + esc(coverChar(g.title)) + '</span></div>' +
         '<div class="book-meta">' +
           '<div class="book-title">' + esc(g.title) + '</div>' +
-          '<div class="book-sub">' + docs.length + ' 章读书笔记' +
+          '<div class="book-sub">' + docs.length + ' 章读书笔记<i class="fold">▾</i>' +
             (g.link ? ' · <a href="' + esc(g.link) + '" target="_blank" rel="noopener">原文 ↗</a>' : '') +
           '</div>' +
         '</div>' +
-        statusSelectHtml(g.status) +
-        '<span class="fold">▾</span>' +
+        statusPillHtml(g.status) +
       '</div>' +
       '<div class="chapters"><div class="ch-inner">' + ch + '</div></div>' +
       '<div class="book-foot">' +
@@ -502,19 +524,35 @@
   }
 
   /* ---- actions ---- */
-  function statusSelectHtml(status) {
+  var statusMenuEl = null, statusMenuFor = null;
+  function statusPillHtml(status) {
     status = status || 'todo';
-    return '<select class="status-sel ' + esc(status) + '" data-act="status" title="切换状态">' +
-      '<option value="todo"' + (status === 'todo' ? ' selected' : '') + '>未开始</option>' +
-      '<option value="doing"' + (status === 'doing' ? ' selected' : '') + '>进行中</option>' +
-      '<option value="done"' + (status === 'done' ? ' selected' : '') + '>已完成</option>' +
-    '</select>';
+    var name = status === 'done' ? '已完成' : (status === 'doing' ? '进行中' : '未开始');
+    return '<button class="status-pill ' + esc(status) + '" data-act="status" title="切换状态">' + name + '<i class="chev">▾</i></button>';
   }
+  function openStatusMenu(id, anchor) {
+    var g = state.goals.find(function (x) { return x.id === id; });
+    if (!g) return;
+    statusMenuFor = id;
+    Array.prototype.forEach.call(statusMenuEl.querySelectorAll('.status-opt'), function (o) {
+      o.classList.toggle('active', o.getAttribute('data-s') === g.status);
+    });
+    statusMenuEl.hidden = false;
+    var r = anchor.getBoundingClientRect();
+    var mr = statusMenuEl.getBoundingClientRect();
+    var left = Math.min(r.left, window.innerWidth - mr.width - 8);
+    var top = r.bottom + 6;
+    if (top + mr.height > window.innerHeight - 8) top = r.top - mr.height - 6;
+    statusMenuEl.style.left = Math.max(8, left) + 'px';
+    statusMenuEl.style.top = Math.max(8, top) + 'px';
+  }
+  function closeStatusMenu() { statusMenuEl.hidden = true; statusMenuFor = null; }
   function setStatus(id, status) {
     var g = state.goals.find(function (x) { return x.id === id; });
     if (!g) return;
     g.status = status;
     saveGoals(); render();
+    closeStatusMenu();
   }
   function openForm(id) {
     state.editingId = id || null;
@@ -573,6 +611,7 @@
   /* ---- events ---- */
   function init() {
     state.quarter = currentQuarter();
+    statusMenuEl = $('#statusMenu');
     try { state.dim = localStorage.getItem(DIM_KEY) || '内功'; } catch (e) {}
 
     $('#qPrev').addEventListener('click', function () { state.quarter = shiftQuarter(state.quarter, -1); render(); });
@@ -599,17 +638,19 @@
       var btn = e.target.closest('[data-act]');
       if (!btn) return;
       var act = btn.getAttribute('data-act');
-      if (act === 'fold' || act === 'docs') { openIds[id] = !openIds[id]; render(); }
+      if (act === 'status') openStatusMenu(id, btn);
+      else if (act === 'fold' || act === 'docs') { openIds[id] = !openIds[id]; render(); }
       else if (act === 'edit') openForm(id);
       else if (act === 'del') { if (confirm('删除这条目标？')) delGoal(id); }
     });
 
-    $('#goals').addEventListener('change', function (e) {
-      var sel = e.target.closest('select[data-act="status"]');
-      if (!sel) return;
-      var card = e.target.closest('.goal');
-      if (!card) return;
-      setStatus(card.getAttribute('data-id'), sel.value);
+    statusMenuEl.addEventListener('click', function (e) {
+      var o = e.target.closest('.status-opt');
+      if (!o) return;
+      setStatus(statusMenuFor, o.getAttribute('data-s'));
+    });
+    document.addEventListener('click', function (e) {
+      if (!statusMenuEl.hidden && !e.target.closest('.status-pill') && !e.target.closest('#statusMenu')) closeStatusMenu();
     });
 
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeForm(); });

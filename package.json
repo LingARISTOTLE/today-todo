@@ -1,0 +1,11 @@
+{
+  "name": "today-todo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "今日待办 —— 单文件网页 + CLI + 本地数据源（零依赖）",
+  "scripts": {
+    "start": "node server.mjs",
+    "cli": "node cli.mjs"
+  }
+}

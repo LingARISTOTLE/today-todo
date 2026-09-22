@@ -1,0 +1,14 @@
+goals.html
+  h_8bfa60ac84826d 187,201-204,451,460,597
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0c3d40361c997c90dbb1181dad1631b5d824d0b0",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

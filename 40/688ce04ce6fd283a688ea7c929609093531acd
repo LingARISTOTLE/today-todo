@@ -1,0 +1,26 @@
+cli.mjs
+  h_8bfa60ac84826d 4,8
+goals.html
+  h_8bfa60ac84826d 315
+goals.js
+  h_8bfa60ac84826d 1-286
+index.html
+  h_8bfa60ac84826d 480
+index.js
+  h_8bfa60ac84826d 1-805
+server.mjs
+  h_8bfa60ac84826d 6,9
+store.mjs
+  h_8bfa60ac84826d 1-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "40688ce04ce6fd283a688ea7c929609093531acd",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

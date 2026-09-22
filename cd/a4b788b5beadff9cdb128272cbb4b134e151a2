@@ -1,0 +1,14 @@
+.gitignore
+  h_8bfa60ac84826d 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "cda4b788b5beadff9cdb128272cbb4b134e151a2",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+.gitignore
+  h_8bfa60ac84826d 1-4
+.idea/.gitignore
+  h_8bfa60ac84826d 1-5
+.idea/misc.xml
+  h_8bfa60ac84826d 1-4
+README.md
+  h_8bfa60ac84826d 1-74
+cli.mjs
+  h_8bfa60ac84826d 1-318
+index.html
+  h_8bfa60ac84826d 1-1357
+package.json
+  h_8bfa60ac84826d 1-11
+server.mjs
+  h_8bfa60ac84826d 1-116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e7e4b3cea08ba2b0ec9db110872952e86c4b048f",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

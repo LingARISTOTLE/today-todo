@@ -92,6 +92,7 @@
     width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
     transition: background .16s, color .16s, transform .12s; padding: 0;
+    text-decoration: none;
   }
   .icon-btn svg { width: 19px; height: 19px; }
   .icon-btn:hover { background: var(--border); color: var(--text); }
@@ -134,8 +135,7 @@
   .vtab {
     flex: 1; border: 0; background: transparent; color: var(--muted);
     padding: 8px 0; border-radius: 10px; cursor: pointer; font: inherit; font-size: 14px; font-weight: 650;
-    transition: .16s; text-align: center; text-decoration: none; display: inline-flex;
-    align-items: center; justify-content: center;
+    transition: .16s;
   }
   .vtab.active { background: var(--card); color: var(--text); box-shadow: var(--shadow-sm); }
 
@@ -394,6 +394,9 @@
       <div class="sync" id="syncLabel"></div>
     </div>
     <nav class="toolbar">
+      <a class="icon-btn" href="/goals" title="中期目标（内功 / 战功）" aria-label="中期目标">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
+      </a>
       <button class="icon-btn" id="sortBtn" title="切换排序" aria-label="切换排序">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l4-4 4 4"/><path d="M8 17l4 4 4-4"/><path d="M12 3v18"/></svg>
       </button>
@@ -424,7 +427,6 @@
   <div class="viewtabs">
     <button class="vtab active" id="tabList" data-view="list">列表</button>
     <button class="vtab" id="tabCal" data-view="cal">日历</button>
-    <a class="vtab" href="/goals" title="中期目标（内功 / 战功）">目标</a>
   </div>
 
   <!-- 列表视图 -->

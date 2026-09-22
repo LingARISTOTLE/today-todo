@@ -180,18 +180,28 @@
   .book {
     border: 1px solid var(--border); border-radius: 16px;
     background: var(--card); box-shadow: var(--shadow-sm);
-    margin-bottom: 12px; overflow: hidden;
-    transition: border-color .15s, box-shadow .15s;
+    margin-bottom: 14px; overflow: hidden;
+    transition: border-color .18s, box-shadow .18s, transform .18s;
   }
-  .book:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
+  .book:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); transform: translateY(-2px); }
   .book-head { display: flex; align-items: center; gap: 13px; padding: 14px 16px 12px; cursor: pointer; }
   .cover {
-    width: 42px; height: 56px; border-radius: 7px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 20px; font-weight: 750; letter-spacing: -.02em;
-    box-shadow: 0 4px 12px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.16);
-    text-shadow: 0 1px 2px rgba(0,0,0,.15);
+    position: relative; width: 46px; height: 62px; border-radius: 3px 8px 8px 3px;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 21px; font-weight: 800; letter-spacing: -.02em;
+    box-shadow: 0 8px 16px -6px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,255,255,.12);
+    text-shadow: 0 1px 3px rgba(0,0,0,.25); overflow: hidden;
   }
+  .cover::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+    background: rgba(0,0,0,.22); border-radius: 3px 0 0 3px;
+  }
+  .cover::after {
+    content: ''; position: absolute; top: 0; left: 6px; right: 0; height: 42%;
+    background: linear-gradient(rgba(255,255,255,.24), transparent);
+    border-radius: 0 7px 0 0;
+  }
+  .cover span { position: relative; z-index: 1; }
   .book-meta { flex: 1; min-width: 0; }
   .book-title { font-size: 15px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; }
   .book-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
@@ -200,23 +210,18 @@
   .book-head .status { flex-shrink: 0; }
   .fold { color: var(--muted); font-size: 13px; flex-shrink: 0; margin-left: 2px; transition: transform .2s; }
   .book.open .fold { transform: rotate(180deg); }
-  .chapters { display: none; border-top: 1px solid var(--border); padding: 6px 0; }
-  .book.open .chapters { display: block; }
+  .chapters { max-height: 0; overflow: hidden; transition: max-height .38s cubic-bezier(.4, 0, .2, 1); }
+  .book.open .chapters { max-height: 900px; }
+  .ch-inner { border-top: 1px solid var(--border); padding: 6px 0; }
   .chapter {
-    display: flex; align-items: center; gap: 11px;
-    padding: 7px 16px; color: var(--text-2); text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px; color: var(--text-2); text-decoration: none;
     font-size: 13px; transition: background .13s, color .13s;
   }
   .chapter:hover { background: var(--border); color: var(--text); }
-  .ch-num {
-    width: 26px; height: 22px; border-radius: 6px; flex-shrink: 0;
-    background: var(--accent-soft); color: var(--accent);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 720; font-variant-numeric: tabular-nums;
-  }
-  .ch-title { flex: 1; line-height: 1.4; }
-  .ch-link { color: var(--muted); font-size: 13px; opacity: 0; transition: opacity .13s; }
-  .chapter:hover .ch-link { opacity: 1; }
+  .ch-title { flex: 1; line-height: 1.5; }
+  .ch-link { color: var(--muted); font-size: 13px; opacity: 0; transform: translateX(-3px); transition: opacity .15s, transform .15s; }
+  .chapter:hover .ch-link { opacity: 1; transform: translateX(0); }
   .book-foot {
     border-top: 1px solid var(--border); padding: 7px 12px 7px 16px;
     display: flex; justify-content: flex-end; gap: 2px;
@@ -422,34 +427,25 @@
     'linear-gradient(135deg, #db2777, #f472b6)',
     'linear-gradient(135deg, #7c3aed, #a78bfa)'
   ];
-  function coverFor(title) {
-    var h = 0;
-    for (var i = 0; i < title.length; i++) h = (h * 31 + title.charCodeAt(i)) >>> 0;
-    return COVERS[h % COVERS.length];
-  }
   function coverChar(title) {
     var t = String(title || '').replace(/^《/, '').replace(/》$/, '').trim();
     return t ? t.charAt(0) : '📖';
   }
-  function splitChapter(title) {
-    var m = /^第\s*(\d+)\s*章[：:·\s]*(.*)$/.exec(title);
-    if (m) return { num: m[1], title: m[2] || title };
-    return { num: null, title: title };
+  function stripBookPrefix(t, book) {
+    var s = String(t || ''), b = String(book || '').trim();
+    return (b && s.indexOf(b) === 0) ? s.slice(b.length) : s;
   }
-  function bookHtml(g) {
+  function bookHtml(g, idx) {
     var docs = Array.isArray(g.docs) ? g.docs : [];
     var ch = docs.map(function (d) {
-      var p = splitChapter(d.title);
-      var num = p.num ? (p.num.length < 2 ? '0' + p.num : p.num) : '·';
       return '<a class="chapter" href="' + esc(d.url) + '" target="_blank" rel="noopener">' +
-        '<span class="ch-num">' + num + '</span>' +
-        '<span class="ch-title">' + esc(p.title) + '</span>' +
+        '<span class="ch-title">' + esc(stripBookPrefix(d.title, g.title)) + '</span>' +
         '<span class="ch-link">↗</span>' +
       '</a>';
     }).join('');
     return '<div class="book goal ' + esc(g.status || 'todo') + '" data-id="' + esc(g.id) + '">' +
       '<div class="book-head" data-act="fold" title="展开 / 折叠章节">' +
-        '<div class="cover" style="background:' + coverFor(g.title) + '">' + esc(coverChar(g.title)) + '</div>' +
+        '<div class="cover" style="background:' + COVERS[idx % COVERS.length] + '"><span>' + esc(coverChar(g.title)) + '</span></div>' +
         '<div class="book-meta">' +
           '<div class="book-title">' + esc(g.title) + '</div>' +
           '<div class="book-sub">' + docs.length + ' 章读书笔记' +
@@ -459,7 +455,7 @@
         '<button class="status ' + esc(g.status || 'todo') + '" data-act="status" title="点击切换状态">' + esc(STATUS[g.status] || g.status) + '</button>' +
         '<span class="fold">▾</span>' +
       '</div>' +
-      '<div class="chapters">' + ch + '</div>' +
+      '<div class="chapters"><div class="ch-inner">' + ch + '</div></div>' +
       '<div class="book-foot">' +
         '<button data-act="edit">编辑</button>' +
         '<button data-act="del" class="del">删除</button>' +
@@ -495,7 +491,7 @@
       cats.forEach(function (c) {
         html += '<div class="cat"><div class="cat-head"><span class="cat-name">' + esc(c) + '</span>' +
           '<span class="cat-count">' + map[c].length + ' 条</span></div>' +
-          map[c].map(function (g) { return g.category === '书籍阅读' ? bookHtml(g) : goalHtml(g); }).join('') + '</div>';
+          map[c].map(function (g, i) { return g.category === '书籍阅读' ? bookHtml(g, i) : goalHtml(g); }).join('') + '</div>';
       });
     }
     $('#goals').innerHTML = html;

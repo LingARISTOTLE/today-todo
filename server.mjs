@@ -3,7 +3,7 @@
 // 2) 提供 /api/state，让网页与 CLI 共用同一份 data.json
 // 启动：node server.mjs  （默认 http://localhost:3210）
 import { createServer } from 'node:http';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, renameSync, copyFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, extname } from 'node:path';
 
@@ -29,19 +29,37 @@ function defaultState() {
     settings: { base: 'https://api.deepseek.com/v1', key: '', model: 'deepseek-chat' }
   };
 }
+function normalize(raw) {
+  const d = JSON.parse(raw);
+  if (!d || typeof d !== 'object') throw new Error('bad data');
+  d.tasks = Array.isArray(d.tasks) ? d.tasks : [];
+  d.goals = Array.isArray(d.goals) ? d.goals : [];
+  return d;
+}
 function load() {
   if (!existsSync(DATA_FILE)) return defaultState();
   try {
-    const d = JSON.parse(readFileSync(DATA_FILE, 'utf8'));
-    d.tasks = Array.isArray(d.tasks) ? d.tasks : [];
-    d.goals = Array.isArray(d.goals) ? d.goals : [];
-    return d;
+    return normalize(readFileSync(DATA_FILE, 'utf8'));
   } catch (e) {
+    console.error('[today-todo] data.json 解析失败，尝试从 .bak 恢复:', e.message);
+    const bak = DATA_FILE + '.bak';
+    if (existsSync(bak)) {
+      try { return normalize(readFileSync(bak, 'utf8')); }
+      catch (e2) { console.error('[today-todo] .bak 也损坏:', e2.message); }
+    }
     return defaultState();
   }
 }
 function save(data) {
-  writeFileSync(DATA_FILE, JSON.stringify(data, null, 2) + '\n', 'utf8');
+  const json = JSON.stringify(data, null, 2) + '\n';
+  // 落盘前先备份当前文件
+  if (existsSync(DATA_FILE)) {
+    try { copyFileSync(DATA_FILE, DATA_FILE + '.bak'); } catch (e) { console.error('备份失败:', e.message); }
+  }
+  // 原子写：先写临时文件再 rename，避免中途崩溃损坏 data.json
+  const tmp = DATA_FILE + '.tmp';
+  writeFileSync(tmp, json, 'utf8');
+  renameSync(tmp, DATA_FILE);
 }
 
 const server = createServer((req, res) => {

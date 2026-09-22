@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // today-todo CLI —— 零依赖，操作项目根目录的 data.json（与网页共用同一份数据）
 // 用法见 `node cli.mjs help`
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, renameSync, copyFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -20,20 +20,37 @@ function defaultState() {
     }
   };
 }
+function parseData(raw) {
+  const d = JSON.parse(raw);
+  if (!d || typeof d !== 'object') throw new Error('bad data');
+  d.tasks = (Array.isArray(d.tasks) ? d.tasks : []).map((t) => {
+    if (!t.due) t.due = t.createdDay || todayStr(); // 截止日期必填：缺失回填
+    return t;
+  });
+  return d;
+}
 function load() {
   if (!existsSync(DATA_FILE)) return defaultState();
   try {
-    const d = JSON.parse(readFileSync(DATA_FILE, 'utf8'));
-    if (!d || typeof d !== 'object') return defaultState();
-    d.tasks = (Array.isArray(d.tasks) ? d.tasks : []).map((t) => {
-      if (!t.due) t.due = t.createdDay || todayStr(); // 截止日期必填：缺失回填
-      return t;
-    });
-    return d;
-  } catch (e) { return defaultState(); }
+    return parseData(readFileSync(DATA_FILE, 'utf8'));
+  } catch (e) {
+    console.error('[today-todo] data.json 解析失败，尝试从 .bak 恢复:', e.message);
+    const bak = DATA_FILE + '.bak';
+    if (existsSync(bak)) {
+      try { return parseData(readFileSync(bak, 'utf8')); }
+      catch (e2) { console.error('[today-todo] .bak 也损坏:', e2.message); }
+    }
+    return defaultState();
+  }
 }
 function save(data) {
-  writeFileSync(DATA_FILE, JSON.stringify(data, null, 2) + '\n', 'utf8');
+  const json = JSON.stringify(data, null, 2) + '\n';
+  if (existsSync(DATA_FILE)) {
+    try { copyFileSync(DATA_FILE, DATA_FILE + '.bak'); } catch (e) { console.error('备份失败:', e.message); }
+  }
+  const tmp = DATA_FILE + '.tmp';
+  writeFileSync(tmp, json, 'utf8');
+  renameSync(tmp, DATA_FILE);
 }
 function archiveFile(month) {
   return join(__dirname, 'data-' + month + '.json');

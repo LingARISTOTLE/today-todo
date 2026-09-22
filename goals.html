@@ -184,7 +184,7 @@
     transition: border-color .15s, box-shadow .15s;
   }
   .book:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
-  .book-head { display: flex; align-items: center; gap: 13px; padding: 14px 16px 12px; }
+  .book-head { display: flex; align-items: center; gap: 13px; padding: 14px 16px 12px; cursor: pointer; }
   .cover {
     width: 42px; height: 56px; border-radius: 7px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -198,7 +198,10 @@
   .book-sub a { color: var(--accent); text-decoration: none; }
   .book-sub a:hover { text-decoration: underline; }
   .book-head .status { flex-shrink: 0; }
-  .chapters { border-top: 1px solid var(--border); padding: 6px 0; }
+  .fold { color: var(--muted); font-size: 13px; flex-shrink: 0; margin-left: 2px; transition: transform .2s; }
+  .book.open .fold { transform: rotate(180deg); }
+  .chapters { display: none; border-top: 1px solid var(--border); padding: 6px 0; }
+  .book.open .chapters { display: block; }
   .chapter {
     display: flex; align-items: center; gap: 11px;
     padding: 7px 16px; color: var(--text-2); text-decoration: none;
@@ -445,7 +448,7 @@
       '</a>';
     }).join('');
     return '<div class="book goal ' + esc(g.status || 'todo') + '" data-id="' + esc(g.id) + '">' +
-      '<div class="book-head">' +
+      '<div class="book-head" data-act="fold" title="展开 / 折叠章节">' +
         '<div class="cover" style="background:' + coverFor(g.title) + '">' + esc(coverChar(g.title)) + '</div>' +
         '<div class="book-meta">' +
           '<div class="book-title">' + esc(g.title) + '</div>' +
@@ -454,6 +457,7 @@
           '</div>' +
         '</div>' +
         '<button class="status ' + esc(g.status || 'todo') + '" data-act="status" title="点击切换状态">' + esc(STATUS[g.status] || g.status) + '</button>' +
+        '<span class="fold">▾</span>' +
       '</div>' +
       '<div class="chapters">' + ch + '</div>' +
       '<div class="book-foot">' +
@@ -590,6 +594,7 @@
       var act = btn.getAttribute('data-act');
       if (act === 'status') cycleStatus(id);
       else if (act === 'docs') card.classList.toggle('open');
+      else if (act === 'fold') card.classList.toggle('open');
       else if (act === 'edit') openForm(id);
       else if (act === 'del') { if (confirm('删除这条目标？')) delGoal(id); }
     });

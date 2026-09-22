@@ -61,12 +61,13 @@
     min-height: 100vh;
     transition: background .25s, color .25s;
   }
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 20px 100px; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 100px; }
 
-  .topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
-  .back { color: var(--muted); text-decoration: none; font-size: 13px; }
+  /* header */
+  .topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+  .back { color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 600; }
   .back:hover { color: var(--accent); }
-  h1 { font-size: 30px; font-weight: 780; letter-spacing: -.03em; margin: 4px 0 0; line-height: 1.05; }
+  h1 { font-size: 30px; font-weight: 780; letter-spacing: -.03em; margin: 5px 0 0; line-height: 1.05; }
   .sub { color: var(--muted); font-size: 13px; margin-top: 7px; }
   .toolbar { display: flex; gap: 2px; }
   .icon-btn {
@@ -77,81 +78,104 @@
   }
   .icon-btn:hover { background: var(--border); color: var(--text); }
 
+  /* quarter bar */
   .quarterbar {
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 8px;
     background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-    padding: 10px 14px; box-shadow: var(--shadow-sm); margin-bottom: 18px;
+    padding: 10px 12px; box-shadow: var(--shadow-sm); margin-bottom: 16px;
   }
   .qbtn {
-    border: 1px solid var(--border); background: transparent; color: var(--text);
-    width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font-size: 16px;
-    transition: background .15s;
+    border: 0; background: transparent; color: var(--text);
+    width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font-size: 18px;
+    transition: background .15s; flex-shrink: 0;
   }
   .qbtn:hover { background: var(--border); }
-  .qbtn.qtoday { width: auto; padding: 0 12px; font-size: 13px; color: var(--muted); }
-  .qinfo { flex: 1; text-align: center; }
-  .q-title { font-size: 17px; font-weight: 720; letter-spacing: -.01em; }
-  .q-range { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .qinfo { flex: 1; text-align: center; line-height: 1.2; }
+  .q-title { font-size: 16px; font-weight: 720; letter-spacing: -.01em; }
+  .q-range { font-size: 12px; color: var(--muted); }
+  .qtoday { width: auto; padding: 0 10px; font-size: 12px; color: var(--muted); border: 1px solid var(--border); }
+  .qtoday:hover { color: var(--text); }
   .addbtn {
     border: 0; background: var(--accent); color: #fff; cursor: pointer;
-    height: 34px; padding: 0 16px; border-radius: 9px; font-size: 14px; font-weight: 650;
-    transition: filter .15s, transform .1s;
+    height: 34px; padding: 0 15px; border-radius: 9px; font-size: 13px; font-weight: 650;
+    transition: filter .15s, transform .1s; flex-shrink: 0; white-space: nowrap;
   }
   .addbtn:hover { filter: brightness(1.08); }
   .addbtn:active { transform: scale(.97); }
 
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 720px) { .cols { grid-template-columns: 1fr; } }
-
-  .dim-col {
-    background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-    padding: 16px; box-shadow: var(--shadow-sm);
+  /* dimension tabs */
+  .dimtabs { display: flex; gap: 4px; background: var(--border); padding: 4px; border-radius: 13px; margin-bottom: 14px; }
+  .dimtab {
+    flex: 1; border: 0; background: transparent; color: var(--muted); cursor: pointer;
+    padding: 8px 0; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 650;
+    transition: .16s; display: flex; align-items: center; justify-content: center; gap: 7px;
   }
-  .dim-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .dim-name { font-size: 16px; font-weight: 750; display: flex; align-items: center; gap: 8px; }
-  .dim-dot { width: 9px; height: 9px; border-radius: 50%; }
-  .dim-内功 .dim-dot { background: var(--accent); }
-  .dim-战功 .dim-dot { background: var(--warn); }
-  .dim-progress { font-size: 12px; color: var(--muted); }
-  .dim-progress b { color: var(--ok); font-weight: 700; }
-
-  .cat { margin-bottom: 14px; }
-  .cat:last-child { margin-bottom: 0; }
-  .cat-name {
-    font-size: 12px; color: var(--muted); font-weight: 650; letter-spacing: .02em;
-    margin: 0 0 7px; text-transform: none;
+  .dimtab .n {
+    font-size: 11px; font-weight: 700; background: var(--border-strong); color: var(--text-2);
+    border-radius: 99px; padding: 1px 7px; line-height: 1.5;
   }
+  .dimtab.active { background: var(--card); color: var(--text); box-shadow: var(--shadow-sm); }
+  .dimtab.active .n { background: var(--accent-soft); color: var(--accent); }
+
+  /* progress */
+  .progress { height: 6px; border-radius: 99px; background: var(--border); overflow: hidden; margin: 0 0 8px; }
+  .progress > i {
+    display: block; height: 100%; width: 0; border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width .5s cubic-bezier(.22, 1, .36, 1);
+  }
+  .prog-label { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+  .prog-label b { color: var(--ok); font-weight: 700; }
+
+  /* goal list */
+  .cat { margin-bottom: 22px; }
+  .cat-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 9px; }
+  .cat-name { font-size: 13px; color: var(--muted); font-weight: 680; }
+  .cat-count { font-size: 11px; color: var(--muted); opacity: .8; }
+
   .goal {
-    display: flex; flex-direction: column; gap: 5px;
-    border: 1px solid var(--border); border-radius: 11px; padding: 10px 12px;
-    margin-bottom: 8px; background: var(--bg); transition: border-color .15s;
+    border: 1px solid var(--border); border-radius: 13px; padding: 12px 14px;
+    margin-bottom: 9px; background: var(--card); box-shadow: var(--shadow-sm);
+    transition: border-color .15s, box-shadow .15s;
   }
-  .goal:hover { border-color: var(--border-strong); }
-  .goal .row1 { display: flex; align-items: center; gap: 8px; }
-  .goal .title { flex: 1; font-size: 14px; font-weight: 600; line-height: 1.35; }
-  .goal.done .title { color: var(--muted); text-decoration: line-through; }
+  .goal:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
+  .g-top { display: flex; align-items: center; gap: 10px; }
+  .g-top .title { flex: 1; font-size: 14.5px; font-weight: 640; line-height: 1.35; }
+  .goal.done .g-top .title { color: var(--muted); text-decoration: line-through; }
   .status {
-    border: 0; border-radius: 6px; font-size: 11px; padding: 2px 7px; cursor: pointer;
-    white-space: nowrap; flex-shrink: 0; font-weight: 650;
+    border: 0; border-radius: 7px; font-size: 11px; padding: 3px 8px; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0; font-weight: 680; letter-spacing: .01em;
   }
   .status.todo { color: var(--muted); background: var(--border); }
   .status.doing { color: var(--warn); background: var(--warn-soft); }
   .status.done { color: var(--ok); background: var(--ok-soft); }
-  .goal .link { font-size: 12px; color: var(--accent); text-decoration: none; }
-  .goal .link:hover { text-decoration: underline; }
-  .goal .note { font-size: 12px; color: var(--muted); }
-  .goal .docs { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
-  .goal .doclink { font-size: 12px; color: var(--text-2); text-decoration: none; line-height: 1.45; }
-  .goal .doclink:hover { color: var(--accent); }
-  .goal .doclink::before { content: '· '; color: var(--muted); }
-  .goal .acts { display: flex; gap: 6px; }
-  .goal .acts button {
+  .g-acts { display: flex; gap: 2px; flex-shrink: 0; }
+  .g-acts button {
     border: 0; background: transparent; color: var(--muted); cursor: pointer;
-    font-size: 12px; padding: 2px 4px; border-radius: 5px;
+    font-size: 12px; padding: 4px 7px; border-radius: 7px; transition: .14s;
   }
-  .goal .acts button:hover { background: var(--border); color: var(--text); }
-  .goal .acts .del:hover { color: var(--danger); }
-  .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 26px 0; }
+  .g-acts button:hover { background: var(--border); color: var(--text); }
+  .g-acts .del:hover { color: var(--danger); }
+
+  .goal .link { font-size: 12px; color: var(--accent); text-decoration: none; display: inline-block; margin-top: 7px; }
+  .goal .link:hover { text-decoration: underline; }
+
+  .docs-toggle {
+    border: 0; background: transparent; color: var(--muted); cursor: pointer;
+    font-size: 12px; padding: 4px 0; margin-top: 5px; font-family: inherit; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .docs-toggle:hover { color: var(--text); }
+  .docs-toggle .chev { transition: transform .2s; display: inline-block; font-size: 10px; }
+  .goal.open .docs-toggle .chev { transform: rotate(180deg); }
+  .docs { display: none; flex-direction: column; gap: 2px; margin-top: 7px; padding-left: 4px; }
+  .goal.open .docs { display: flex; }
+  .doclink { font-size: 12px; color: var(--text-2); text-decoration: none; line-height: 1.7; }
+  .doclink:hover { color: var(--accent); }
+  .doclink::before { content: '· '; color: var(--muted); }
+
+  .goal .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 0; }
 
   /* modal */
   .mask {
@@ -183,7 +207,7 @@
     <div>
       <a class="back" href="/">← 今日待办</a>
       <h1>中期目标</h1>
-      <div class="sub">内功（能力）· 战功（交付）—— 按季度记录</div>
+      <div class="sub">按季度记录内功（能力）与战功（交付）</div>
     </div>
     <div class="toolbar">
       <button class="icon-btn" id="themeBtn" title="切换主题">🌓</button>
@@ -197,11 +221,19 @@
       <div class="q-range" id="qRange">—</div>
     </div>
     <button class="qbtn" id="qNext" title="下一季度">›</button>
-    <button class="qbtn qtoday" id="qToday">本季度</button>
+    <button class="qbtn qtoday" id="qToday">回到本季度</button>
     <button class="addbtn" id="addBtn">＋ 添加</button>
   </div>
 
-  <main class="cols" id="cols"></main>
+  <div class="dimtabs">
+    <button class="dimtab active" data-dim="内功">内功 <span class="n" id="nNeigong">0</span></button>
+    <button class="dimtab" data-dim="战功">战功 <span class="n" id="nZhangong">0</span></button>
+  </div>
+
+  <div class="progress"><i id="dimProgress"></i></div>
+  <div class="prog-label" id="progLabel"></div>
+
+  <main id="goals"></main>
 </div>
 
 <div class="mask" id="mask" hidden>
@@ -242,7 +274,8 @@
   var DIMS = ['内功', '战功'];
   var STATUS = { todo: '未开始', doing: '进行中', done: '已完成' };
   var THEME_KEY = 'today-todo-theme';
-  var state = { goals: [], quarter: '', editingId: null };
+  var DIM_KEY = 'today-todo-goals-dim';
+  var state = { goals: [], quarter: '', dim: '内功', editingId: null };
 
   var $ = function (s) { return document.querySelector(s); };
   function esc(s) {
@@ -257,15 +290,14 @@
     var m = /^(\d{4})-Q([1-4])$/.exec(q);
     return m ? { y: +m[1], q: +m[2] } : null;
   }
-  function qStr(y, q) { return y + '-Q' + q; }
   function currentQuarter() {
     var d = new Date();
-    return qStr(d.getFullYear(), Math.ceil((d.getMonth() + 1) / 3));
+    return d.getFullYear() + '-Q' + Math.ceil((d.getMonth() + 1) / 3);
   }
   function shiftQuarter(q, delta) {
     var p = qParts(q) || qParts(currentQuarter());
     var idx = p.y * 4 + (p.q - 1) + delta;
-    return qStr(Math.floor(idx / 4), (idx % 4) + 1);
+    return Math.floor(idx / 4) + '-Q' + (idx % 4 + 1);
   }
   function quarterRange(q) {
     var p = qParts(q);
@@ -295,9 +327,11 @@
   function goalsInQuarter() {
     return state.goals.filter(function (g) { return g.quarter === state.quarter; });
   }
-  function groupByCat(dim) {
-    var items = goalsInQuarter().filter(function (g) { return g.dimension === dim; });
-    items.sort(function (a, b) {
+  function dimGoals() {
+    return goalsInQuarter().filter(function (g) { return g.dimension === state.dim; });
+  }
+  function groupByCat(items) {
+    items = items.slice().sort(function (a, b) {
       var o = { todo: 0, doing: 1, done: 2 };
       return (o[a.status] || 0) - (o[b.status] || 0) || (a.createdAt < b.createdAt ? -1 : 1);
     });
@@ -309,46 +343,57 @@
     return map;
   }
   function goalHtml(g) {
+    var docs = Array.isArray(g.docs) ? g.docs : [];
     return '<div class="goal ' + esc(g.status || 'todo') + '" data-id="' + esc(g.id) + '">' +
-      '<div class="row1">' +
+      '<div class="g-top">' +
         '<button class="status ' + esc(g.status || 'todo') + '" data-act="status" title="点击切换状态">' + esc(STATUS[g.status] || g.status) + '</button>' +
         '<span class="title">' + esc(g.title) + '</span>' +
+        '<div class="g-acts">' +
+          '<button data-act="edit" title="编辑">编辑</button>' +
+          '<button data-act="del" class="del" title="删除">删除</button>' +
+        '</div>' +
       '</div>' +
       (g.link ? '<a class="link" href="' + esc(g.link) + '" target="_blank" rel="noopener">📄 打开文档 ↗</a>' : '') +
-      (g.docs && g.docs.length ? '<div class="docs">' + g.docs.map(function (d) {
+      (docs.length ? '<div><button class="docs-toggle" data-act="docs">📚 ' + docs.length + ' 篇笔记 <span class="chev">▾</span></button></div>' : '') +
+      (docs.length ? '<div class="docs">' + docs.map(function (d) {
         return '<a class="doclink" href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.title) + '</a>';
       }).join('') + '</div>' : '') +
       (g.note ? '<div class="note">' + esc(g.note) + '</div>' : '') +
-      '<div class="acts">' +
-        '<button data-act="edit">编辑</button>' +
-        '<button data-act="del" class="del">删除</button>' +
-      '</div>' +
     '</div>';
-  }
-  function dimHtml(dim) {
-    var map = groupByCat(dim);
-    var cats = Object.keys(map);
-    var items = goalsInQuarter().filter(function (g) { return g.dimension === dim; });
-    var done = items.filter(function (g) { return g.status === 'done'; }).length;
-    var html = '<div class="dim-col dim-' + dim + '">' +
-      '<div class="dim-head"><div class="dim-name"><span class="dim-dot"></span>' + dim + '</div>' +
-      '<div class="dim-progress">' + done + '/' + items.length + ' 完成</div></div>';
-    if (!cats.length) {
-      html += '<div class="empty">本季度暂无「' + dim + '」目标</div>';
-    } else {
-      cats.forEach(function (c) {
-        html += '<div class="cat"><div class="cat-name">' + esc(c) + '</div>' +
-          map[c].map(goalHtml).join('') + '</div>';
-      });
-    }
-    html += '</div>';
-    return html;
   }
   function render() {
     var p = qParts(state.quarter);
     $('#qTitle').textContent = p.y + ' · Q' + p.q;
     $('#qRange').textContent = quarterRange(state.quarter);
-    $('#cols').innerHTML = DIMS.map(dimHtml).join('');
+
+    var inQ = goalsInQuarter();
+    var nN = inQ.filter(function (g) { return g.dimension === '内功'; }).length;
+    var nZ = inQ.filter(function (g) { return g.dimension === '战功'; }).length;
+    $('#nNeigong').textContent = nN;
+    $('#nZhangong').textContent = nZ;
+
+    Array.prototype.forEach.call(document.querySelectorAll('.dimtab'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-dim') === state.dim);
+    });
+
+    var items = dimGoals();
+    var done = items.filter(function (g) { return g.status === 'done'; }).length;
+    $('#dimProgress').style.width = items.length ? Math.round(done / items.length * 100) + '%' : '0';
+    $('#progLabel').innerHTML = state.dim + ' · <b>' + done + '</b> / ' + items.length + ' 完成';
+
+    var map = groupByCat(items);
+    var cats = Object.keys(map);
+    var html = '';
+    if (!cats.length) {
+      html = '<div class="empty">本季度暂无「' + state.dim + '」目标<br>点右上「＋ 添加」创建一条</div>';
+    } else {
+      cats.forEach(function (c) {
+        html += '<div class="cat"><div class="cat-head"><span class="cat-name">' + esc(c) + '</span>' +
+          '<span class="cat-count">' + map[c].length + ' 条</span></div>' +
+          map[c].map(goalHtml).join('') + '</div>';
+      });
+    }
+    $('#goals').innerHTML = html;
   }
 
   /* ---- actions ---- */
@@ -356,15 +401,14 @@
     var g = state.goals.find(function (x) { return x.id === id; });
     if (!g) return;
     var order = ['todo', 'doing', 'done'];
-    var i = order.indexOf(g.status);
-    g.status = order[(i + 1) % order.length];
+    g.status = order[(order.indexOf(g.status) + 1) % order.length];
     saveGoals(); render();
   }
   function openForm(id) {
     state.editingId = id || null;
     $('#formTitle').textContent = id ? '编辑目标' : '添加目标';
     var g = id ? state.goals.find(function (x) { return x.id === id; }) : null;
-    $('#fDim').value = g ? (g.dimension || '内功') : '内功';
+    $('#fDim').value = g ? (g.dimension || state.dim) : state.dim;
     $('#fCat').value = g ? (g.category || '') : '';
     $('#fTitle').value = g ? (g.title || '') : '';
     $('#fLink').value = g ? (g.link || '') : '';
@@ -378,11 +422,9 @@
     e.preventDefault();
     var title = $('#fTitle').value.trim();
     if (!title) { $('#fTitle').focus(); return; }
-    var dim = $('#fDim').value || '内功';
-    var cat = $('#fCat').value.trim();
     var data = {
-      dimension: dim,
-      category: cat,
+      dimension: $('#fDim').value || '内功',
+      category: $('#fCat').value.trim(),
       title: title,
       link: $('#fLink').value.trim(),
       status: $('#fStatus').value || 'todo',
@@ -411,8 +453,7 @@
     document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
   }
   function toggleTheme() {
-    var cur = document.documentElement.getAttribute('data-theme');
-    var next = cur === 'light' ? 'dark' : 'light';
+    var next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', next);
     try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
   }
@@ -420,6 +461,8 @@
   /* ---- events ---- */
   function init() {
     state.quarter = currentQuarter();
+    try { state.dim = localStorage.getItem(DIM_KEY) || '内功'; } catch (e) {}
+
     $('#qPrev').addEventListener('click', function () { state.quarter = shiftQuarter(state.quarter, -1); render(); });
     $('#qNext').addEventListener('click', function () { state.quarter = shiftQuarter(state.quarter, 1); render(); });
     $('#qToday').addEventListener('click', function () { state.quarter = currentQuarter(); render(); });
@@ -429,21 +472,28 @@
     $('#form').addEventListener('submit', submitForm);
     $('#mask').addEventListener('click', function (e) { if (e.target === $('#mask')) closeForm(); });
 
-    $('#cols').addEventListener('click', function (e) {
-      var btn = e.target.closest('button[data-act]');
-      if (!btn) return;
+    document.querySelector('.dimtabs').addEventListener('click', function (e) {
+      var b = e.target.closest('.dimtab');
+      if (!b) return;
+      state.dim = b.getAttribute('data-dim');
+      try { localStorage.setItem(DIM_KEY, state.dim); } catch (err) {}
+      render();
+    });
+
+    $('#goals').addEventListener('click', function (e) {
       var card = e.target.closest('.goal');
       if (!card) return;
       var id = card.getAttribute('data-id');
+      var btn = e.target.closest('[data-act]');
+      if (!btn) return;
       var act = btn.getAttribute('data-act');
       if (act === 'status') cycleStatus(id);
+      else if (act === 'docs') card.classList.toggle('open');
       else if (act === 'edit') openForm(id);
       else if (act === 'del') { if (confirm('删除这条目标？')) delGoal(id); }
     });
 
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeForm();
-    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeForm(); });
 
     applyTheme();
     loadGoals();

@@ -1,0 +1,14 @@
+index.html
+  h_8bfa60ac84826d 95,138,397-399
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "5ead2fd276eed7a0a5b685cf55ccd3e111d33f68",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

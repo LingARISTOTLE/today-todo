@@ -134,7 +134,8 @@
   .vtab {
     flex: 1; border: 0; background: transparent; color: var(--muted);
     padding: 8px 0; border-radius: 10px; cursor: pointer; font: inherit; font-size: 14px; font-weight: 650;
-    transition: .16s;
+    transition: .16s; text-align: center; text-decoration: none; display: inline-flex;
+    align-items: center; justify-content: center;
   }
   .vtab.active { background: var(--card); color: var(--text); box-shadow: var(--shadow-sm); }
 
@@ -423,6 +424,7 @@
   <div class="viewtabs">
     <button class="vtab active" id="tabList" data-view="list">列表</button>
     <button class="vtab" id="tabCal" data-view="cal">日历</button>
+    <a class="vtab" href="/goals" title="中期目标（内功 / 战功）">目标</a>
   </div>
 
   <!-- 列表视图 -->

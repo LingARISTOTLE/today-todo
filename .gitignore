@@ -3,6 +3,9 @@ data.json
 data.json.bak
 data.json.tmp
 data-*.json
+data.db
+data.db-wal
+data.db-shm
 .DS_Store
 backups/
 .idea/

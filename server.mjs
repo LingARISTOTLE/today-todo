@@ -6,7 +6,7 @@ import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, extname } from 'node:path';
-import { load, save, DATA_FILE } from './store.mjs';
+import { load, save, DATA_DB } from './store.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3210;
@@ -120,5 +120,5 @@ const server = createServer((req, res) => {
 server.listen(PORT, () => {
   console.log('today-todo 已启动：');
   console.log('  网页  http://localhost:' + PORT);
-  console.log('  数据  ' + DATA_FILE);
+  console.log('  数据  ' + DATA_DB);
 });

@@ -1,6 +1,6 @@
 # 今日待办（today-todo）
 
-一个**零依赖**的「今日待办」工具，三个入口共用同一份本地数据 `data.json`：
+一个**零依赖**的「今日待办」工具，三个入口共用同一份本地 SQLite 数据库 `data.db`：
 
 1. **网页 UI**（`index.html`）—— 列表 + 月度日历
 2. **CLI**（`cli.mjs`）—— 命令行增删改查
@@ -10,11 +10,13 @@
 
 ## 数据存储
 
-单一数据源 = 项目根目录的 `data.json`（已在 `.gitignore`）：
+单一数据源 = 项目根目录的 `data.db`（SQLite，用 Node 22 内置 `node:sqlite`，零外部依赖；已在 `.gitignore`）。所有读写收敛到 `store.mjs`，任务/目标/设置分表存储、事务写入：
 
-```json
-{ "tasks": [ { "id", "title", "priority": 0|1|2|3, "project", "nature", "due", "createdDay", "createdAt", "done", "doneAt" } ], "settings": {...} }
+```text
+tasks / goals / goal_docs / meta（settings + UI 状态）
 ```
+
+task 逻辑模型 = `{ id, title, priority: 0|1|2|3, project, nature, due, createdDay, createdAt, done, doneAt }`
 
 ## 四类标签
 
@@ -32,7 +34,7 @@ node server.mjs          # 或 npm start
 # 打开 http://localhost:3210
 ```
 
-- **列表视图**：输入框回车加任务（**截止日期必填，新建默认今天**）；点 P 标**下拉选优先级**（P0 紧急/P1 高/P2 中/P3 低）；点任务上的标签或 🏷️ 按钮，弹窗编辑「项目 / 截止 / 性质 / 优先级」；双击标题改文字。
+- **列表视图**：输入框回车加任务（**截止日期必填，新建默认今天**）；点 P 标**下拉选优先级**（P0 紧急/P1 高/P2 中/P3 低）；点任务上的标签或「标签」按钮，弹窗编辑「项目 / 截止 / 性质 / 优先级」；双击标题改文字。
 - **日历视图**（顶栏「日历」tab，或直接 `?view=cal`）：
   - 当月日历，标记**周末**（灰）、**法定节假日**（绿「休」+ 节日名）、**调休上班**（橙「班」）；
   - 有截止任务的日期显示**角标数量**，点击某天在下方列出当天截止的任务；
@@ -64,7 +66,7 @@ node cli.mjs export
 
 - 「加个待办：明天发周报，项目架构师Agent，P1」→ `add ... --project=架构师Agent --prio=P1`
 - 「把 maf 迁移那条设截止到 9 月 30 号」→ `tag ... due=2026-09-30`
-- 「这个月 20 号要上什么？」→ 读 `data.json`，按 `due` 答
+- 「这个月 20 号要上什么？」→ 读数据库（`store.mjs`），按 `due` 答
 - 「帮我按优先级排一下」→ AI 直接调优先级/顺序
 
 > 走这条路不需要任何 API Key（AI 由助手本人完成）。

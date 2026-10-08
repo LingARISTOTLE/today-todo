@@ -276,33 +276,6 @@
   }
   .field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
   .field .sub { font-size: 11.5px; color: var(--muted); margin-top: 5px; line-height: 1.45; }
-  .goal-select {
-    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
-    color: var(--text); font: inherit; font-size: 14px; padding: 9px 12px;
-    text-align: left; outline: none; transition: border-color .15s, box-shadow .15s;
-  }
-  .goal-select:hover { border-color: var(--border-strong); }
-  .goal-select:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .goal-select .gs-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .goal-select .chev { color: var(--muted); font-size: 11px; flex-shrink: 0; }
-  .goal-menu {
-    position: fixed; z-index: 70; background: var(--card); border: 1px solid var(--border);
-    border-radius: 13px; box-shadow: var(--shadow-md); padding: 5px; min-width: 260px; max-width: 340px;
-    max-height: 320px; overflow: auto; animation: pop .15s cubic-bezier(.22, 1, .36, 1);
-  }
-  .goal-opt {
-    display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent;
-    font: inherit; font-size: 13.5px; padding: 8px 10px; border-radius: 9px; cursor: pointer;
-    transition: .12s; text-align: left;
-  }
-  .goal-opt:hover { background: var(--border); }
-  .goal-opt .gt { flex: 1; min-width: 0; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .goal-opt .gd { color: var(--muted); font-size: 12px; font-weight: 500; flex-shrink: 0; }
-  .goal-opt .tick { color: var(--accent); font-weight: 700; font-size: 13px; opacity: 0; flex-shrink: 0; }
-  .goal-opt.active .tick { opacity: 1; }
-  .goal-opt.active .gd { display: none; }
-  .goal-opt.empty .gt { color: var(--muted); font-weight: 500; }
   .row { display: flex; gap: 8px; }
   .row input { flex: 1; }
   .prio-group { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -435,8 +408,10 @@
     </div>
     <div class="field">
       <label>项目标签</label>
-      <input id="editProject" type="text" list="projectsList" placeholder="架构师Agent / MAF数据迁移 / 稽查虾…" />
-      <datalist id="projectsList"></datalist>
+      <div class="combo">
+        <input id="editProject" type="text" placeholder="架构师Agent / MAF数据迁移 / 稽查虾…" />
+        <button type="button" class="combo-btn" id="editProjectBtn" aria-label="选择项目">▾</button>
+      </div>
     </div>
     <div class="field">
       <label>截止日期</label>
@@ -455,13 +430,15 @@
     </div>
     <div class="field">
       <label>性质标签</label>
-      <input id="editNature" type="text" list="naturesList" placeholder="探索类 / 交付类 / 学习类…" />
-      <datalist id="naturesList"></datalist>
+      <div class="combo">
+        <input id="editNature" type="text" placeholder="探索类 / 交付类 / 学习类…" />
+        <button type="button" class="combo-btn" id="editNatureBtn" aria-label="选择性质">▾</button>
+      </div>
     </div>
     <div class="field">
       <label>关联中期目标</label>
-      <button type="button" class="goal-select" id="editGoalBtn">
-        <span class="gs-text" id="editGoalText">（不关联）</span>
+      <button type="button" class="sel-btn" id="editGoalBtn">
+        <span class="sb-text" id="editGoalText">（不关联）</span>
         <span class="chev">▾</span>
       </button>
     </div>
@@ -504,7 +481,9 @@
   <button class="prio-opt p3" data-p="3"><span class="dot"></span><b>P3</b><span class="plabel">低</span><span class="tick">✓</span></button>
 </div>
 
-<div class="goal-menu" id="goalMenu" hidden></div>
+<div class="menu" id="projectMenu" hidden></div>
+<div class="menu" id="natureMenu" hidden></div>
+<div class="menu" id="goalMenu" hidden></div>
 
 <div class="toast" id="toast"></div>
 

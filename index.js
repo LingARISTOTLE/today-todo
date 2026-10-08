@@ -77,9 +77,9 @@
     calTitle: $('#calTitle'), calGrid: $('#calGrid'),
     calDayHead: $('#calDayHead'), calDayList: $('#calDayList'),
     editMask: $('#editMask'),
-    editTitle: $('#editTitle'), editProject: $('#editProject'),
-    projectsList: $('#projectsList'), editDue: $('#editDue'),
-    editPrio: $('#editPrio'), editNature: $('#editNature'), naturesList: $('#naturesList'),
+    editTitle: $('#editTitle'), editProject: $('#editProject'), editProjectBtn: $('#editProjectBtn'),
+    editDue: $('#editDue'),
+    editPrio: $('#editPrio'), editNature: $('#editNature'), editNatureBtn: $('#editNatureBtn'),
     editGoalBtn: $('#editGoalBtn'), editGoalText: $('#editGoalText'),
     settingsMask: $('#settingsMask'),
     cfgBase: $('#cfgBase'), cfgKey: $('#cfgKey'), cfgModel: $('#cfgModel')
@@ -209,7 +209,6 @@
   }
   var prioMenuEl = $('#prioMenu');
   var prioMenuFor = null;
-  var goalMenuEl = $('#goalMenu');
   var editingGoalId = '';
   function openPrioMenu(id, anchorEl) {
     var t = state.tasks.find(function (x) { return x.id === id; });
@@ -495,10 +494,6 @@
   }
 
   /* ---------- tag editor modal ---------- */
-  function refreshDatalists() {
-    el.projectsList.innerHTML = state.settings.projects.map(function (p) { return '<option value="' + escapeHtml(p) + '">'; }).join('');
-    el.naturesList.innerHTML = state.settings.natures.map(function (n) { return '<option value="' + escapeHtml(n) + '">'; }).join('');
-  }
   function goalTitle(id) {
     if (!id) return '（不关联）';
     var g = state.goals.find(function (x) { return x.id === id; });
@@ -507,37 +502,11 @@
   function syncGoalSelect() {
     el.editGoalText.textContent = goalTitle(editingGoalId);
   }
-  function renderGoalMenu() {
-    var html = '<button class="goal-opt empty" data-id=""><span class="gt">（不关联）</span><span class="tick">✓</span></button>';
-    state.goals.forEach(function (g) {
-      html += '<button class="goal-opt" data-id="' + escapeHtml(g.id) + '">' +
-        '<span class="gt">' + escapeHtml(g.title) + '</span>' +
-        '<span class="gd">' + escapeHtml(g.dimension || '') + ' · ' + escapeHtml(g.quarter || '') + '</span>' +
-        '<span class="tick">✓</span></button>';
-    });
-    goalMenuEl.innerHTML = html;
-    Array.prototype.forEach.call(goalMenuEl.querySelectorAll('.goal-opt'), function (o) {
-      o.classList.toggle('active', o.getAttribute('data-id') === (editingGoalId || ''));
-    });
-  }
-  function openGoalMenu() {
-    renderGoalMenu();
-    goalMenuEl.hidden = false;
-    var r = el.editGoalBtn.getBoundingClientRect();
-    var mr = goalMenuEl.getBoundingClientRect();
-    var left = Math.min(r.left, window.innerWidth - mr.width - 8);
-    var top = r.bottom + 6;
-    if (top + mr.height > window.innerHeight - 8) top = r.top - mr.height - 6;
-    goalMenuEl.style.left = Math.max(8, left) + 'px';
-    goalMenuEl.style.top = Math.max(8, top) + 'px';
-  }
-  function closeGoalMenu() { goalMenuEl.hidden = true; }
   function openEdit(id) {
     var t = state.tasks.find(function (x) { return x.id === id; });
     if (!t) return;
     state.editingId = id;
     state.editingPrio = t.priority;
-    refreshDatalists();
     el.editTitle.value = t.title;
     el.editProject.value = t.project || '';
     el.editDue.value = t.due || '';
@@ -552,7 +521,7 @@
       b.classList.toggle('active', parseInt(b.getAttribute('data-p'), 10) === state.editingPrio);
     });
   }
-  function closeEdit() { el.editMask.classList.remove('show'); state.editingId = null; closeGoalMenu(); }
+  function closeEdit() { el.editMask.classList.remove('show'); state.editingId = null; }
   function saveEdit() {
     var t = state.tasks.find(function (x) { return x.id === state.editingId; });
     if (!t) { closeEdit(); return; }
@@ -795,17 +764,25 @@
       state.editingPrio = parseInt(b.getAttribute('data-p'), 10);
       syncPrioButtons();
     });
-    el.editGoalBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      if (goalMenuEl.hidden) openGoalMenu(); else closeGoalMenu();
-    });
-    goalMenuEl.addEventListener('click', function (e) {
-      var o = e.target.closest('.goal-opt');
-      if (!o) return;
-      editingGoalId = o.getAttribute('data-id') || '';
-      syncGoalSelect();
-      closeGoalMenu();
-    });
+    window.dropdown(el.editProjectBtn, $('#projectMenu'), function () {
+      return state.settings.projects.map(function (p) {
+        return { value: p, label: p, active: el.editProject.value === p };
+      });
+    }, function (v) { el.editProject.value = v; });
+
+    window.dropdown(el.editNatureBtn, $('#natureMenu'), function () {
+      return state.settings.natures.map(function (n) {
+        return { value: n, label: n, active: el.editNature.value === n };
+      });
+    }, function (v) { el.editNature.value = v; });
+
+    window.dropdown(el.editGoalBtn, $('#goalMenu'), function () {
+      var items = [{ value: '', label: '（不关联）', muted: true, active: !editingGoalId }];
+      state.goals.forEach(function (g) {
+        items.push({ value: g.id, label: g.title, sub: (g.dimension || '') + ' · ' + (g.quarter || ''), active: editingGoalId === g.id });
+      });
+      return items;
+    }, function (v) { editingGoalId = v; syncGoalSelect(); });
 
     prioMenuEl.addEventListener('click', function (e) {
       var o = e.target.closest('.prio-opt');
@@ -814,7 +791,6 @@
     });
     document.addEventListener('click', function (e) {
       if (!prioMenuEl.hidden && !e.target.closest('.prio') && !e.target.closest('#prioMenu')) closePrioMenu();
-      if (!goalMenuEl.hidden && !e.target.closest('#editGoalBtn') && !e.target.closest('#goalMenu')) closeGoalMenu();
     });
 
     el.settingsMask.addEventListener('click', function (e) {

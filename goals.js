@@ -14,6 +14,9 @@
   var state = { goals: [], quarter: '', dim: '内功', editingId: null, playing: null, genKey: null };
   var openIds = {};
   var audioEl = null;
+  var formDim = '内功';
+  var formStatus = 'todo';
+  var currentVoiceId = VOICES[0].id;
 
 
   /* ---- quarter ---- */
@@ -213,16 +216,21 @@
     saveGoals(); render();
     closeStatusMenu();
   }
+  function syncFormSelects() {
+    $('#fDimText').textContent = formDim || '内功';
+    $('#fStatusText').textContent = STATUS[formStatus] || '未开始';
+  }
   function openForm(id) {
     state.editingId = id || null;
     $('#formTitle').textContent = id ? '编辑目标' : '添加目标';
     var g = id ? state.goals.find(function (x) { return x.id === id; }) : null;
-    $('#fDim').value = g ? (g.dimension || state.dim) : state.dim;
+    formDim = g ? (g.dimension || state.dim) : state.dim;
+    formStatus = g ? (g.status || 'todo') : 'todo';
     $('#fCat').value = g ? (g.category || '') : '';
     $('#fTitle').value = g ? (g.title || '') : '';
     $('#fLink').value = g ? (g.link || '') : '';
-    $('#fStatus').value = g ? (g.status || 'todo') : 'todo';
     $('#fNote').value = g ? (g.note || '') : '';
+    syncFormSelects();
     $('#mask').hidden = false;
     $('#fTitle').focus();
   }
@@ -232,11 +240,11 @@
     var title = $('#fTitle').value.trim();
     if (!title) { $('#fTitle').focus(); return; }
     var data = {
-      dimension: $('#fDim').value || '内功',
+      dimension: formDim || '内功',
       category: $('#fCat').value.trim(),
       title: title,
       link: $('#fLink').value.trim(),
-      status: $('#fStatus').value || 'todo',
+      status: formStatus || 'todo',
       note: $('#fNote').value.trim()
     };
     if (state.editingId) {
@@ -255,22 +263,17 @@
   }
 
   /* ---- 语音朗读 ---- */
-  function currentVoice() {
-    var sel = $('#voiceSel');
-    return (sel && sel.value) ? sel.value : VOICES[0].id;
+  function currentVoice() { return currentVoiceId; }
+  function voiceLabel(id) {
+    var v = VOICES.find(function (x) { return x.id === id; });
+    return v ? v.label : (VOICES[0] ? VOICES[0].label : '');
   }
+  function syncVoiceBtn() { $('#voiceSelText').textContent = voiceLabel(currentVoiceId); }
   function initVoices() {
-    var sel = $('#voiceSel');
-    if (!sel) return;
-    sel.innerHTML = VOICES.map(function (v) {
-      return '<option value="' + esc(v.id) + '">' + esc(v.label) + '</option>';
-    }).join('');
     var saved = null;
     try { saved = localStorage.getItem(VOICE_KEY); } catch (e) {}
-    if (saved && VOICES.some(function (v) { return v.id === saved; })) sel.value = saved;
-    sel.addEventListener('change', function () {
-      try { localStorage.setItem(VOICE_KEY, sel.value); } catch (e) {}
-    });
+    currentVoiceId = (saved && VOICES.some(function (v) { return v.id === saved; })) ? saved : VOICES[0].id;
+    syncVoiceBtn();
   }
   function docOf(goalId, ord) {
     var g = state.goals.find(function (x) { return x.id === goalId; });
@@ -401,6 +404,29 @@
     });
 
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeForm(); });
+
+    window.dropdown($('#fDimBtn'), $('#dimMenu'), function () {
+      return DIMS.map(function (d) { return { value: d, label: d, active: formDim === d }; });
+    }, function (v) { formDim = v; syncFormSelects(); });
+
+    window.dropdown($('#fStatusBtn'), $('#fStatusMenu'), function () {
+      return Object.keys(STATUS).map(function (k) { return { value: k, label: STATUS[k], active: formStatus === k }; });
+    }, function (v) { formStatus = v; syncFormSelects(); });
+
+    window.dropdown($('#fCatBtn'), $('#catMenu'), function () {
+      var cats = [];
+      state.goals.forEach(function (g) { if (g.category && cats.indexOf(g.category) < 0) cats.push(g.category); });
+      if (!cats.length) cats = ['书籍阅读', '项目交付'];
+      return cats.map(function (c) { return { value: c, label: c, active: $('#fCat').value === c }; });
+    }, function (v) { $('#fCat').value = v; });
+
+    window.dropdown($('#voiceSelBtn'), $('#voiceMenu'), function () {
+      return VOICES.map(function (v) { return { value: v.id, label: v.label, active: currentVoiceId === v.id }; });
+    }, function (v) {
+      currentVoiceId = v;
+      syncVoiceBtn();
+      try { localStorage.setItem(VOICE_KEY, v); } catch (e) {}
+    });
 
     audioEl = $('#ttsAudio');
     initVoices();

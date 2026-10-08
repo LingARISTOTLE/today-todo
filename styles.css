@@ -83,3 +83,43 @@
     min-height: 100vh;
   }
   
+/* 统一下拉（弹层）与下拉按钮 */
+.menu {
+  position: fixed; z-index: 80; background: var(--card); border: 1px solid var(--border);
+  border-radius: 13px; box-shadow: var(--shadow-md); padding: 5px; min-width: 160px; max-width: 320px;
+  max-height: 340px; overflow: auto; animation: pop .15s cubic-bezier(.22, 1, .36, 1);
+}
+.menu-opt {
+  display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent;
+  font: inherit; font-size: 13.5px; padding: 8px 10px; border-radius: 9px; cursor: pointer;
+  transition: .12s; text-align: left;
+}
+.menu-opt:hover { background: var(--border); }
+.menu-opt .mo-label { flex: 1; min-width: 0; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.menu-opt .mo-sub { color: var(--muted); font-size: 12px; font-weight: 500; flex-shrink: 0; }
+.menu-opt .tick { color: var(--accent); font-weight: 700; font-size: 13px; opacity: 0; flex-shrink: 0; }
+.menu-opt.active .tick { opacity: 1; }
+.menu-opt.active .mo-sub { display: none; }
+.menu-opt.muted .mo-label { color: var(--muted); font-weight: 500; }
+@keyframes pop { from { opacity: 0; transform: translateY(-5px) scale(.985); } to { opacity: 1; transform: none; } }
+
+.sel-btn {
+  width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+  color: var(--text); font: inherit; font-size: 14px; padding: 9px 12px;
+  text-align: left; outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.sel-btn:hover { border-color: var(--border-strong); }
+.sel-btn:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.sel-btn .sb-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sel-btn .chev { color: var(--muted); font-size: 11px; flex-shrink: 0; }
+
+/* 自由文本 + 建议下拉（组合框） */
+.combo { display: flex; align-items: stretch; gap: 6px; }
+.combo input { flex: 1; min-width: 0; }
+.combo-btn {
+  flex-shrink: 0; border: 1px solid var(--border); background: var(--bg); color: var(--muted);
+  cursor: pointer; font-size: 12px; padding: 0 11px; border-radius: 9px; line-height: 1;
+  transition: border-color .15s, color .15s;
+}
+.combo-btn:hover { border-color: var(--border-strong); color: var(--text); }

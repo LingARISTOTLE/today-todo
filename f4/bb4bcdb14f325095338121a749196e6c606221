@@ -1,0 +1,18 @@
+README.md
+  h_8bfa60ac84826d 78
+index.html
+  h_8bfa60ac84826d 60-78,378-389
+index.js
+  h_8bfa60ac84826d 68-70,88-89,190-234,805-810,871,873
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f4bb4bcdb14f325095338121a749196e6c606221",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

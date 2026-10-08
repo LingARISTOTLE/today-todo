@@ -55,6 +55,16 @@ CREATE TABLE IF NOT EXISTS goal_docs (
   url TEXT NOT NULL DEFAULT '',
   PRIMARY KEY (goal_id, ord)
 );
+CREATE TABLE IF NOT EXISTS goal_doc_audio (
+  goal_id TEXT NOT NULL,
+  ord INTEGER NOT NULL,
+  content TEXT NOT NULL DEFAULT '',
+  audio TEXT NOT NULL DEFAULT '',
+  voice TEXT NOT NULL DEFAULT '',
+  fetched_at TEXT NOT NULL DEFAULT '',
+  audio_at TEXT NOT NULL DEFAULT '',
+  PRIMARY KEY (goal_id, ord)
+);
 CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -118,9 +128,20 @@ function readGoals() {
     title: r.title, link: r.link, status: r.status, note: r.note, createdAt: r.created_at, docs: []
   }));
   const byId = new Map(goals.map((g) => [g.id, g]));
+  const audByKey = new Map();
+  for (const a of db.prepare('SELECT * FROM goal_doc_audio').all()) {
+    audByKey.set(a.goal_id + ':' + a.ord, a);
+  }
   for (const doc of db.prepare('SELECT * FROM goal_docs ORDER BY ord').all()) {
     const g = byId.get(doc.goal_id);
-    if (g) g.docs.push({ title: doc.title, url: doc.url });
+    if (!g) continue;
+    const a = audByKey.get(doc.goal_id + ':' + doc.ord);
+    g.docs.push({
+      ord: doc.ord,
+      title: doc.title,
+      url: doc.url,
+      audio: a ? { voice: a.voice, audio: a.audio, fetchedAt: a.fetched_at, audioAt: a.audio_at } : null
+    });
   }
   return goals;
 }
@@ -166,4 +187,30 @@ export function save(data) {
     db.exec('ROLLBACK');
     throw e;
   }
+}
+
+// —— 读书笔记语音（正文 + 生成音频的绑定），由 server 的 /api/doc/tts 维护，
+//    不参与前端 goals 的整表回写，避免前端 save 时把正文/音频抹掉。
+export function getDoc(goalId, ord) {
+  const row = db.prepare('SELECT goal_id, ord, title, url FROM goal_docs WHERE goal_id = ? AND ord = ?').get(goalId, ord);
+  return row || null;
+}
+
+export function getDocAudio(goalId, ord) {
+  const row = db.prepare('SELECT * FROM goal_doc_audio WHERE goal_id = ? AND ord = ?').get(goalId, ord);
+  if (!row) return null;
+  return { content: row.content, audio: row.audio, voice: row.voice, fetchedAt: row.fetched_at, audioAt: row.audio_at };
+}
+
+export function setDocAudio(goalId, ord, data) {
+  db.prepare(
+    `INSERT INTO goal_doc_audio (goal_id, ord, content, audio, voice, fetched_at, audio_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(goal_id, ord) DO UPDATE SET
+       content = excluded.content,
+       audio = excluded.audio,
+       voice = excluded.voice,
+       fetched_at = excluded.fetched_at,
+       audio_at = excluded.audio_at`
+  ).run(goalId, ord, data.content || '', data.audio || '', data.voice || '', data.fetchedAt || '', data.audioAt || '');
 }

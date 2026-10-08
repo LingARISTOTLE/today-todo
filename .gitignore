@@ -6,6 +6,7 @@ data-*.json
 data.db
 data.db-wal
 data.db-shm
+audio/
 .DS_Store
 backups/
 .idea/

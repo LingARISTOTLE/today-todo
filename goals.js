@@ -1,8 +1,19 @@
   var DIMS = ['内功', '战功'];
   var STATUS = { todo: '未开始', doing: '进行中', done: '已完成' };
   var DIM_KEY = 'today-todo-goals-dim';
-  var state = { goals: [], quarter: '', dim: '内功', editingId: null };
+  var VOICE_KEY = 'today-todo-tts-voice';
+  // 音色按质量从高到低排序，默认取第一个（晓晓）
+  var VOICES = [
+    { id: 'zh-CN-XiaoxiaoNeural', label: '晓晓 · 女（推荐）' },
+    { id: 'zh-CN-YunxiNeural', label: '云希 · 男' },
+    { id: 'zh-CN-YunyangNeural', label: '云扬 · 男·播报' },
+    { id: 'zh-CN-XiaoyiNeural', label: '晓伊 · 女·活泼' },
+    { id: 'zh-CN-YunjianNeural', label: '云健 · 男·浑厚' },
+    { id: 'zh-CN-YunxiaNeural', label: '云夏 · 男·少年' }
+  ];
+  var state = { goals: [], quarter: '', dim: '内功', editingId: null, playing: null, genKey: null };
   var openIds = {};
+  var audioEl = null;
 
 
   /* ---- quarter ---- */
@@ -97,14 +108,27 @@
     var s = String(t || ''), b = String(book || '').trim();
     return (b && s.indexOf(b) === 0) ? s.slice(b.length) : s;
   }
+  function chapterHtml(g, docs) {
+    return docs.map(function (d, di) {
+      var key = g.id + ':' + di;
+      var au = d.audio;
+      var hasAudio = au && au.audio && au.voice === currentVoice();
+      var playing = isPlaying(key);
+      var loading = state.genKey === key;
+      var playBtn = '<button class="ch-play' + (playing ? ' playing' : '') + '" data-act="play" title="' +
+        (hasAudio ? '播放 / 暂停' : '生成并播放') + '">' +
+        (loading ? '<span class="spin"></span>' : (playing ? '⏸' : '▶')) + '</button>';
+      var updBtn = '<button class="ch-upd" data-act="update" title="从飞书重新抓取正文并生成音频">⟳</button>';
+      var ok = hasAudio ? '<span class="ch-ok" title="已生成音频">♪</span>' : '';
+      return '<div class="chapter" data-ord="' + di + '">' + playBtn +
+        '<a class="ch-title" href="' + esc(d.url) + '" target="_blank" rel="noopener">' +
+          esc(stripBookPrefix(d.title, g.title)) + '</a>' + ok + updBtn + '</div>';
+    }).join('');
+  }
+
   function bookHtml(g, idx) {
     var docs = Array.isArray(g.docs) ? g.docs : [];
-    var ch = docs.map(function (d) {
-      return '<a class="chapter" href="' + esc(d.url) + '" target="_blank" rel="noopener">' +
-        '<span class="ch-title">' + esc(stripBookPrefix(d.title, g.title)) + '</span>' +
-        '<span class="ch-link">↗</span>' +
-      '</a>';
-    }).join('');
+    var ch = chapterHtml(g, docs);
     return '<div class="book goal ' + esc(g.status || 'todo') + (openIds[g.id] ? ' open' : '') + '" data-id="' + esc(g.id) + '">' +
       '<div class="book-head" data-act="fold" title="展开 / 折叠章节">' +
         '<div class="cover" style="background:' + COVERS[idx % COVERS.length] + '"><span>' + esc(coverChar(g.title)) + '</span></div>' +
@@ -230,6 +254,96 @@
     saveGoals(); render();
   }
 
+  /* ---- 语音朗读 ---- */
+  function currentVoice() {
+    var sel = $('#voiceSel');
+    return (sel && sel.value) ? sel.value : VOICES[0].id;
+  }
+  function initVoices() {
+    var sel = $('#voiceSel');
+    if (!sel) return;
+    sel.innerHTML = VOICES.map(function (v) {
+      return '<option value="' + esc(v.id) + '">' + esc(v.label) + '</option>';
+    }).join('');
+    var saved = null;
+    try { saved = localStorage.getItem(VOICE_KEY); } catch (e) {}
+    if (saved && VOICES.some(function (v) { return v.id === saved; })) sel.value = saved;
+    sel.addEventListener('change', function () {
+      try { localStorage.setItem(VOICE_KEY, sel.value); } catch (e) {}
+    });
+  }
+  function docOf(goalId, ord) {
+    var g = state.goals.find(function (x) { return x.id === goalId; });
+    if (!g) return null;
+    var docs = Array.isArray(g.docs) ? g.docs : [];
+    return docs[ord] || null;
+  }
+  function isPlaying(key) {
+    return state.playing === key && audioEl && !audioEl.paused;
+  }
+  function stopAudio() {
+    if (!audioEl) audioEl = $('#ttsAudio');
+    audioEl.pause();
+    audioEl.removeAttribute('src');
+    try { audioEl.load(); } catch (e) {}
+    state.playing = null;
+  }
+  function togglePlay(goalId, ord, doc) {
+    if (!audioEl) audioEl = $('#ttsAudio');
+    var key = goalId + ':' + ord;
+    if (state.playing === key) {
+      if (audioEl.paused) { audioEl.play().catch(function () {}); }
+      else { audioEl.pause(); }
+    } else {
+      stopAudio();
+      state.playing = key;
+      audioEl.src = doc.audio.audio + '?v=' + encodeURIComponent(doc.audio.audioAt || Date.now());
+      audioEl.play().catch(function () {});
+    }
+    render();
+  }
+  function generateDoc(goalId, ord, voice) {
+    var key = goalId + ':' + ord;
+    if (state.genKey) return Promise.reject(new Error('已有笔记正在生成，请稍候'));
+    state.genKey = key;
+    render();
+    return fetch('/api/doc/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ goal_id: goalId, ord: ord, voice: voice })
+    }).then(function (r) {
+      return r.json().then(function (j) {
+        if (!r.ok || !j.ok) throw new Error(j.error || '生成失败');
+        return j;
+      });
+    }).then(function (j) {
+      var doc = docOf(goalId, ord);
+      if (doc) doc.audio = { voice: j.voice, audio: j.audio, fetchedAt: j.fetchedAt, audioAt: j.audioAt };
+      return j;
+    }).finally(function () {
+      state.genKey = null;
+      render();
+    });
+  }
+  function playChapter(goalId, ord) {
+    var doc = docOf(goalId, ord);
+    if (!doc) return;
+    var voice = currentVoice();
+    var ready = doc.audio && doc.audio.audio && doc.audio.voice === voice;
+    if (ready) { togglePlay(goalId, ord, doc); return; }
+    generateDoc(goalId, ord, voice).then(function () {
+      var d2 = docOf(goalId, ord);
+      if (d2) togglePlay(goalId, ord, d2);
+    }).catch(function (err) {
+      alert('音频生成失败：' + (err && err.message || err));
+    });
+  }
+  function updateChapter(goalId, ord) {
+    generateDoc(goalId, ord, currentVoice()).catch(function (err) {
+      alert('音频生成失败：' + (err && err.message || err));
+    });
+  }
+
   /* ---- theme ---- */
 
   /* ---- events ---- */
@@ -267,6 +381,14 @@
       else if (act === 'fold' || act === 'docs') { openIds[id] = !openIds[id]; render(); }
       else if (act === 'edit') openForm(id);
       else if (act === 'del') { if (confirm('删除这条目标？')) delGoal(id); }
+      else if (act === 'play') {
+        var ch = btn.closest('.chapter');
+        if (ch) playChapter(id, Number(ch.getAttribute('data-ord')));
+      }
+      else if (act === 'update') {
+        var ch2 = btn.closest('.chapter');
+        if (ch2) updateChapter(id, Number(ch2.getAttribute('data-ord')));
+      }
     });
 
     statusMenuEl.addEventListener('click', function (e) {
@@ -279,6 +401,15 @@
     });
 
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeForm(); });
+
+    audioEl = $('#ttsAudio');
+    initVoices();
+    ['play', 'pause', 'ended'].forEach(function (ev) {
+      audioEl.addEventListener(ev, function () {
+        if (ev === 'ended') state.playing = null;
+        render();
+      });
+    });
 
     applyTheme();
     loadGoals();

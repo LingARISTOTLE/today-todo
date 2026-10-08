@@ -1,0 +1,24 @@
+goals.html
+  h_8bfa60ac84826d 31-32,35-36,38,273-276,310,313-316,325,343-347
+goals.js
+  h_8bfa60ac84826d 17-19,219-222,227-228,233,243,247,266-269,271,275-276,408-430
+index.html
+  h_8bfa60ac84826d 411-414,433-436,440-441,484-486
+index.js
+  h_8bfa60ac84826d 80-82,524,767-785
+shared.js
+  h_8bfa60ac84826d 34-89
+styles.css
+  h_8bfa60ac84826d 85-125
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "d8ba1062c5bc05d1488dd74ee30521443dcb5b89",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

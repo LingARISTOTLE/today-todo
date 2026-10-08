@@ -3,6 +3,7 @@
 // 好处：真正的原子事务 + 多进程并发安全（多标签页/server/cli 同时写不串数据）。
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { existsSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
 
 // node:sqlite 在 Node 22 仍是实验特性，加载前拦截其「实验性」提示（其余警告照常）。
 const _origEmitWarning = process.emitWarning;
@@ -16,6 +17,10 @@ const { DatabaseSync } = await import('node:sqlite');
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const DATA_DB = join(__dirname, '..', 'data.db');
 export const DATA_VERSION = 1;
+
+// 写前自动备份：VACUUM INTO 生成一致快照到 backups/，保留最近 N 份；失败不阻塞主流程。
+const BACKUP_DIR = join(__dirname, '..', 'backups');
+const MAX_BACKUPS = 20;
 
 // UI 状态字段（存 meta.ui，任务/目标/设置进专门表）
 const UI_KEYS = ['sortMode', 'view', 'filter', 'calYear', 'calMonth', 'selectedDay', 'editingId', 'editingPrio'];
@@ -172,8 +177,25 @@ export function load() {
   return normalize(d);
 }
 
+function backupBeforeWrite() {
+  try {
+    mkdirSync(BACKUP_DIR, { recursive: true });
+    const p = (n) => (n < 10 ? '0' : '') + n;
+    const d = new Date();
+    const stem = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + '-' +
+      p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+    let target = join(BACKUP_DIR, 'data-' + stem + '.db');
+    let n = 1;
+    while (existsSync(target)) target = join(BACKUP_DIR, 'data-' + stem + '-' + (n++) + '.db');
+    db.exec("VACUUM INTO '" + target.replace(/'/g, "''") + "'");
+    const list = readdirSync(BACKUP_DIR).filter((f) => /^data-\d{4}-.*\.db$/.test(f)).sort();
+    while (list.length > MAX_BACKUPS) { try { unlinkSync(join(BACKUP_DIR, list.shift())); } catch (e) {} }
+  } catch (e) { /* 备份失败不阻塞主流程 */ }
+}
+
 export function save(data) {
   const d = normalize(data);
+  backupBeforeWrite();
   db.exec('BEGIN IMMEDIATE');
   try {
     db.exec('DELETE FROM tasks');
@@ -240,6 +262,7 @@ export function loadLearn() {
 export function saveLearn(learn) {
   const entries = Array.isArray(learn && learn.entries) ? learn.entries : [];
   const reviews = (learn && learn.reviews && typeof learn.reviews === 'object') ? learn.reviews : {};
+  backupBeforeWrite();
   db.exec('BEGIN IMMEDIATE');
   try {
     db.exec('DELETE FROM learn_entries');

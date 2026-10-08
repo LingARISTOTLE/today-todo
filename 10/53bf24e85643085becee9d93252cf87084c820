@@ -1,0 +1,32 @@
+calendar.js
+  h_8bfa60ac84826d 1-135
+goals.css
+  h_8bfa60ac84826d 1-253
+goals.html
+  h_8bfa60ac84826d 8
+holidays.js
+  h_8bfa60ac84826d 1-50
+index.css
+  h_8bfa60ac84826d 1-325
+index.html
+  h_8bfa60ac84826d 8
+index.js
+  h_8bfa60ac84826d 3-6,51-53,101,271,588,592,597,602
+learn.css
+  h_8bfa60ac84826d 1-134
+learn.html
+  h_8bfa60ac84826d 8
+utils.js
+  h_8bfa60ac84826d 1-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "1053bf24e85643085becee9d93252cf87084c820",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

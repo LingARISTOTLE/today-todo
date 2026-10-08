@@ -1,0 +1,14 @@
+src/store.mjs
+  h_8bfa60ac84826d 6,21-24,180-195,198,265
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "845467533dab992547cf365efa9ce9420180f4b7",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

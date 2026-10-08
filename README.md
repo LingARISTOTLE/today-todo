@@ -1,10 +1,12 @@
 # 今日待办（today-todo）
 
-一个**零依赖**的「今日待办」工具，三个入口共用同一份本地 SQLite 数据库 `data.db`：
+一个**零依赖**的「今日待办 + 成长」工具，多入口共用同一份本地 SQLite 数据库 `data.db`：
 
-1. **网页 UI**（`index.html`）—— 列表 + 月度日历
-2. **CLI**（`cli.mjs`）—— 命令行增删改查
-3. **AI 助手（我）**—— 直接对话，我帮你加/查/排/打标签
+1. **今日待办**（`index.html`）—— 列表 + 月度日历
+2. **中期目标**（`goals.html`）—— 内功（能力）/ 战功（交付）+ 读书笔记朗读
+3. **你今天学了吗**（`learn.html`）—— 每日学习日记 + 季度复盘
+4. **CLI**（`cli.mjs`）—— 命令行增删改查
+5. **AI 助手（我）**—— 直接对话，我帮你加/查/排/打标签
 
 核心针对「一天并行事情太多、忙一件丢一件」：**未完成的任务永远留在列表上并标红拖延天数**；支持四类标签归类；月度日历一眼看清当月节奏。
 
@@ -13,7 +15,7 @@
 单一数据源 = 项目根目录的 `data.db`（SQLite，用 Node 22 内置 `node:sqlite`，零外部依赖；已在 `.gitignore`）。所有读写收敛到 `store.mjs`，任务/目标/设置分表存储、事务写入：
 
 ```text
-tasks / goals / goal_docs / meta（settings + UI 状态）
+tasks / goals / goal_docs / goal_doc_audio / learn_entries / learn_reviews / meta
 ```
 
 task 逻辑模型 = `{ id, title, priority: 0|1|2|3, project, nature, due, createdDay, createdAt, done, doneAt }`
@@ -70,6 +72,17 @@ node cli.mjs export
 - 「帮我按优先级排一下」→ AI 直接调优先级/顺序
 
 > 走这条路不需要任何 API Key（AI 由助手本人完成）。
+
+## 四、你今天学了吗
+
+打开 http://localhost:3210/learn（或首页顶栏 💡 图标）：
+
+- **速记**：每天写一段「今天学到了什么」，可一天多条。
+- **日历打卡**：月历里哪天写了会亮一个绿点，空白 = 没记录。
+- **连续学习天数**：顶部显示当前连续写了多少天，断更归零。
+- **季度复盘**：「季度复盘」tab 看当季「已学习 / 已过 / 未学习」天数，并写季度总结。
+
+> 数据在 `learn_entries` / `learn_reviews` 两张表，同样零依赖、本地 SQLite。
 
 ## 关于「AI 排优先级」按钮（网页顶栏 ✨）
 

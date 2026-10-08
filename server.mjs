@@ -9,7 +9,7 @@ import { promisify } from 'node:util';
 import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, extname } from 'node:path';
-import { load, save, DATA_DB, getDoc, setDocAudio } from './store.mjs';
+import { load, save, DATA_DB, getDoc, setDocAudio, loadLearn, saveLearn } from './store.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3210;
@@ -210,6 +210,31 @@ const server = createServer((req, res) => {
     return;
   }
 
+  if (path === '/api/learn') {
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(loadLearn()));
+    } else if (req.method === 'POST') {
+      let body = '';
+      req.on('data', (c) => { body += c; if (body.length > 5e6) req.destroy(); });
+      req.on('end', () => {
+        try {
+          const d = JSON.parse(body);
+          if (!d || typeof d !== 'object') throw new Error('bad body');
+          saveLearn(d);
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end('{"ok":true}');
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end('{"ok":false}');
+        }
+      });
+    } else {
+      res.writeHead(405); res.end();
+    }
+    return;
+  }
+
   if (path === '/api/month') {
     if (req.method !== 'GET') { res.writeHead(405); res.end(); return; }
     const month = (url.searchParams.get('month') || '').trim();
@@ -264,7 +289,7 @@ const server = createServer((req, res) => {
   }
 
   // 静态文件
-  const rel = path === '/' ? '/index.html' : (path === '/goals' ? '/goals.html' : path);
+  const rel = path === '/' ? '/index.html' : (path === '/goals' ? '/goals.html' : (path === '/learn' ? '/learn.html' : path));
   const fp = join(__dirname, rel);
   if (!fp.startsWith(__dirname)) { res.writeHead(403); res.end('forbidden'); return; }
   if (!existsSync(fp)) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('404 not found'); return; }

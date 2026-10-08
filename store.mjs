@@ -65,6 +65,18 @@ CREATE TABLE IF NOT EXISTS goal_doc_audio (
   audio_at TEXT NOT NULL DEFAULT '',
   PRIMARY KEY (goal_id, ord)
 );
+CREATE TABLE IF NOT EXISTS learn_entries (
+  id TEXT PRIMARY KEY,
+  date TEXT NOT NULL DEFAULT '',
+  content TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT '',
+  updated_at TEXT
+);
+CREATE TABLE IF NOT EXISTS learn_reviews (
+  quarter TEXT PRIMARY KEY,
+  content TEXT NOT NULL DEFAULT '',
+  updated_at TEXT NOT NULL DEFAULT ''
+);
 CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -213,4 +225,36 @@ export function setDocAudio(goalId, ord, data) {
        fetched_at = excluded.fetched_at,
        audio_at = excluded.audio_at`
   ).run(goalId, ord, data.content || '', data.audio || '', data.voice || '', data.fetchedAt || '', data.audioAt || '');
+}
+
+// —— 「你今天学了吗」：每日学习日记 + 季度复盘 ——
+export function loadLearn() {
+  const entries = db.prepare('SELECT * FROM learn_entries ORDER BY date DESC, rowid DESC').all().map((r) => ({
+    id: r.id, date: r.date, content: r.content, createdAt: r.created_at, updatedAt: r.updated_at || null
+  }));
+  const reviews = {};
+  for (const r of db.prepare('SELECT * FROM learn_reviews').all()) reviews[r.quarter] = r.content;
+  return { entries, reviews };
+}
+
+export function saveLearn(learn) {
+  const entries = Array.isArray(learn && learn.entries) ? learn.entries : [];
+  const reviews = (learn && learn.reviews && typeof learn.reviews === 'object') ? learn.reviews : {};
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    db.exec('DELETE FROM learn_entries');
+    const insE = db.prepare('INSERT INTO learn_entries (id,date,content,created_at,updated_at) VALUES (?,?,?,?,?)');
+    for (const e of entries) {
+      insE.run(e.id, e.date || '', e.content || '', e.createdAt || '', e.updatedAt || null);
+    }
+    db.exec('DELETE FROM learn_reviews');
+    const insR = db.prepare('INSERT INTO learn_reviews (quarter,content,updated_at) VALUES (?,?,?)');
+    for (const q of Object.keys(reviews)) {
+      if (reviews[q]) insR.run(q, reviews[q], new Date().toISOString());
+    }
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
 }

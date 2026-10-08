@@ -80,7 +80,7 @@
     editTitle: $('#editTitle'), editProject: $('#editProject'),
     projectsList: $('#projectsList'), editDue: $('#editDue'),
     editPrio: $('#editPrio'), editNature: $('#editNature'), naturesList: $('#naturesList'),
-    editGoal: $('#editGoal'),
+    editGoalBtn: $('#editGoalBtn'), editGoalText: $('#editGoalText'),
     settingsMask: $('#settingsMask'),
     cfgBase: $('#cfgBase'), cfgKey: $('#cfgKey'), cfgModel: $('#cfgModel')
   };
@@ -209,6 +209,8 @@
   }
   var prioMenuEl = $('#prioMenu');
   var prioMenuFor = null;
+  var goalMenuEl = $('#goalMenu');
+  var editingGoalId = '';
   function openPrioMenu(id, anchorEl) {
     var t = state.tasks.find(function (x) { return x.id === id; });
     if (!t) return;
@@ -497,26 +499,51 @@
     el.projectsList.innerHTML = state.settings.projects.map(function (p) { return '<option value="' + escapeHtml(p) + '">'; }).join('');
     el.naturesList.innerHTML = state.settings.natures.map(function (n) { return '<option value="' + escapeHtml(n) + '">'; }).join('');
   }
-  function refreshGoalOptions() {
-    var opts = '<option value="">（不关联）</option>';
-    state.goals.forEach(function (g) {
-      opts += '<option value="' + escapeHtml(g.id) + '">' + escapeHtml(g.title) +
-        ' · ' + escapeHtml(g.dimension || '') + ' · ' + escapeHtml(g.quarter || '') + '</option>';
-    });
-    el.editGoal.innerHTML = opts;
+  function goalTitle(id) {
+    if (!id) return '（不关联）';
+    var g = state.goals.find(function (x) { return x.id === id; });
+    return g ? g.title : '（不关联）';
   }
+  function syncGoalSelect() {
+    el.editGoalText.textContent = goalTitle(editingGoalId);
+  }
+  function renderGoalMenu() {
+    var html = '<button class="goal-opt empty" data-id=""><span class="gt">（不关联）</span><span class="tick">✓</span></button>';
+    state.goals.forEach(function (g) {
+      html += '<button class="goal-opt" data-id="' + escapeHtml(g.id) + '">' +
+        '<span class="gt">' + escapeHtml(g.title) + '</span>' +
+        '<span class="gd">' + escapeHtml(g.dimension || '') + ' · ' + escapeHtml(g.quarter || '') + '</span>' +
+        '<span class="tick">✓</span></button>';
+    });
+    goalMenuEl.innerHTML = html;
+    Array.prototype.forEach.call(goalMenuEl.querySelectorAll('.goal-opt'), function (o) {
+      o.classList.toggle('active', o.getAttribute('data-id') === (editingGoalId || ''));
+    });
+  }
+  function openGoalMenu() {
+    renderGoalMenu();
+    goalMenuEl.hidden = false;
+    var r = el.editGoalBtn.getBoundingClientRect();
+    var mr = goalMenuEl.getBoundingClientRect();
+    var left = Math.min(r.left, window.innerWidth - mr.width - 8);
+    var top = r.bottom + 6;
+    if (top + mr.height > window.innerHeight - 8) top = r.top - mr.height - 6;
+    goalMenuEl.style.left = Math.max(8, left) + 'px';
+    goalMenuEl.style.top = Math.max(8, top) + 'px';
+  }
+  function closeGoalMenu() { goalMenuEl.hidden = true; }
   function openEdit(id) {
     var t = state.tasks.find(function (x) { return x.id === id; });
     if (!t) return;
     state.editingId = id;
     state.editingPrio = t.priority;
     refreshDatalists();
-    refreshGoalOptions();
     el.editTitle.value = t.title;
     el.editProject.value = t.project || '';
     el.editDue.value = t.due || '';
     el.editNature.value = t.nature || '';
-    el.editGoal.value = t.goalId || '';
+    editingGoalId = t.goalId || '';
+    syncGoalSelect();
     syncPrioButtons();
     el.editMask.classList.add('show');
   }
@@ -525,7 +552,7 @@
       b.classList.toggle('active', parseInt(b.getAttribute('data-p'), 10) === state.editingPrio);
     });
   }
-  function closeEdit() { el.editMask.classList.remove('show'); state.editingId = null; }
+  function closeEdit() { el.editMask.classList.remove('show'); state.editingId = null; closeGoalMenu(); }
   function saveEdit() {
     var t = state.tasks.find(function (x) { return x.id === state.editingId; });
     if (!t) { closeEdit(); return; }
@@ -534,7 +561,7 @@
     t.nature = el.editNature.value.trim();
     t.due = el.editDue.value || todayStr();
     t.priority = state.editingPrio;
-    t.goalId = el.editGoal.value || '';
+    t.goalId = editingGoalId || '';
     if (t.project && state.settings.projects.indexOf(t.project) < 0) state.settings.projects.push(t.project);
     if (t.nature && state.settings.natures.indexOf(t.nature) < 0) state.settings.natures.push(t.nature);
     save(); closeEdit(); render();
@@ -768,6 +795,17 @@
       state.editingPrio = parseInt(b.getAttribute('data-p'), 10);
       syncPrioButtons();
     });
+    el.editGoalBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (goalMenuEl.hidden) openGoalMenu(); else closeGoalMenu();
+    });
+    goalMenuEl.addEventListener('click', function (e) {
+      var o = e.target.closest('.goal-opt');
+      if (!o) return;
+      editingGoalId = o.getAttribute('data-id') || '';
+      syncGoalSelect();
+      closeGoalMenu();
+    });
 
     prioMenuEl.addEventListener('click', function (e) {
       var o = e.target.closest('.prio-opt');
@@ -776,6 +814,7 @@
     });
     document.addEventListener('click', function (e) {
       if (!prioMenuEl.hidden && !e.target.closest('.prio') && !e.target.closest('#prioMenu')) closePrioMenu();
+      if (!goalMenuEl.hidden && !e.target.closest('#editGoalBtn') && !e.target.closest('#goalMenu')) closeGoalMenu();
     });
 
     el.settingsMask.addEventListener('click', function (e) {

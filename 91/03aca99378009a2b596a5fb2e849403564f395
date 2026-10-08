@@ -1,0 +1,26 @@
+README.md
+  h_8bfa60ac84826d 3,5-9,18,76-86
+goals.html
+  h_8bfa60ac84826d 277-279
+index.html
+  h_8bfa60ac84826d 329-331
+learn.html
+  h_8bfa60ac84826d 1-195
+learn.js
+  h_8bfa60ac84826d 1-304
+server.mjs
+  h_8bfa60ac84826d 12,213-237,292
+store.mjs
+  h_8bfa60ac84826d 68-79,229-260
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "9103aca99378009a2b596a5fb2e849403564f395",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

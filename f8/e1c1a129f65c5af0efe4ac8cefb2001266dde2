@@ -1,0 +1,22 @@
+.gitignore
+  h_8bfa60ac84826d 9
+goals.html
+  h_8bfa60ac84826d 28-35,194,198-216,270,339-340
+goals.js
+  h_8bfa60ac84826d 4-14,16,111-128,131,257-346,384-391,405-413
+server.mjs
+  h_8bfa60ac84826d 6-9,12,25,29-155,242-265
+store.mjs
+  h_8bfa60ac84826d 58-67,131-134,137-144,191-216
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f8e1c1a129f65c5af0efe4ac8cefb2001266dde2",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

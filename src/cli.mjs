@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { load, save, todayStr } from './store.mjs';
+import { load, save, todayStr, loadLearn, saveLearn } from './store.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PRIO = { 0: 'P0', 1: 'P1', 2: 'P2', 3: 'P3' };
@@ -30,6 +30,53 @@ function resolveTarget(data, arg) {
   const undone = sortedUndone(data);
   if (!isNaN(n) && n >= 1 && n <= undone.length) return undone[n - 1];
   return null;
+}
+function currentQuarter() {
+  const d = new Date();
+  return d.getFullYear() + '-Q' + Math.ceil((d.getMonth() + 1) / 3);
+}
+const GOAL_STATUS = { todo: '未开始', doing: '进行中', done: '已完成' };
+function visibleGoals(data, quarter) {
+  return quarter === 'all' ? data.goals.slice() : data.goals.filter((g) => g.quarter === quarter);
+}
+function resolveGoal(data, arg, quarter) {
+  if (!arg) return null;
+  const byId = data.goals.find((g) => g.id === arg);
+  if (byId) return byId;
+  const list = visibleGoals(data, quarter);
+  const n = parseInt(arg, 10);
+  if (!isNaN(n) && n >= 1 && n <= list.length) return list[n - 1];
+  const matches = data.goals.filter((g) => g.title && g.title.indexOf(arg) >= 0);
+  return matches.length === 1 ? matches[0] : null;
+}
+function formatGoals(data, quarter) {
+  const goals = visibleGoals(data, quarter);
+  const lines = [];
+  lines.push('中期目标  ' + (quarter === 'all' ? '（全部季度）' : quarter));
+  lines.push('─'.repeat(52));
+  if (!goals.length) lines.push('  （该季度暂无目标）');
+  goals.forEach((g, i) => {
+    const tags = [g.dimension, g.category, GOAL_STATUS[g.status] || g.status].filter(Boolean).join('/');
+    lines.push(`  [${i + 1}] [${tags}] ${g.title}`);
+    if (g.note) lines.push('        备注：' + g.note);
+    if (g.docs && g.docs.length) lines.push('        笔记 ' + g.docs.length + ' 篇');
+  });
+  lines.push('─'.repeat(52));
+  return lines.join('\n');
+}
+function formatLearn(learn) {
+  const entries = learn.entries || [];
+  const lines = [];
+  lines.push('学习日记  共 ' + entries.length + ' 条');
+  lines.push('─'.repeat(52));
+  if (!entries.length) lines.push('  （还没有学习记录）');
+  let lastDate = '';
+  entries.forEach((e) => {
+    if (e.date !== lastDate) { lastDate = e.date; lines.push('  ' + e.date); }
+    lines.push('    - ' + e.content);
+  });
+  lines.push('─'.repeat(52));
+  return lines.join('\n');
 }
 function parseFlags(args) {
   const flags = {}, rest = [];
@@ -101,6 +148,16 @@ const HELP = `today-todo CLI
   clear-done                   清除所有已完成
   archive [YYYY-MM]            归档已完成任务到 data-YYYY-MM.json（缺省归档所有已过月份；未完成任务不动）
   export                       输出 Markdown（含标签，可粘给 AI / 笔记）
+
+目标（中期目标）：
+  goal-list [YYYY-QN|all]      列出目标（缺省=当前季度；all=全部）
+  goal-add "标题" [--quarter=YYYY-QN] [--dimension=内功|战功] [--category=XX] [--link=URL] [--note=XX] [--status=todo|doing|done]
+  goal-status <id|编号|标题关键词> <todo|doing|done>   改目标状态
+  goal-rm   <id|编号|标题关键词>                       删除目标
+
+学习（今天学了吗）：
+  learn-add "内容"             记一条今天的学习
+  learn-list [YYYY-MM-DD|YYYY-MM]  列出学习日记（可按日期过滤）
   help                         本帮助
 
 提示：编号用 list 里显示的 [n]（1 起始）；也可用完整任务 id。`;
@@ -280,6 +337,65 @@ switch (cmd) {
     L.push('', '## 已完成 (' + done.length + ')');
     done.forEach((t) => L.push('- [x] ' + t.title));
     print(L.join('\n'));
+    break;
+  }
+  case 'goal-list': {
+    const q = args[1] || currentQuarter();
+    if (q !== 'all' && !/^\d{4}-Q[1-4]$/.test(q)) { print('季度格式：YYYY-QN（如 2026-Q4），或 all'); break; }
+    print(formatGoals(data, q));
+    break;
+  }
+  case 'goal-add': {
+    const parsed = parseFlags(args.slice(1));
+    const title = (parsed.rest[0] || '').trim();
+    if (!title) { print('用法：node src/cli.mjs goal-add "标题" [--quarter=..] [--dimension=内功|战功] [--category=..] [--link=..] [--note=..] [--status=todo|doing|done]'); break; }
+    const dim = parsed.flags.dimension || '内功';
+    const status = parsed.flags.status || 'todo';
+    if (dim !== '内功' && dim !== '战功') { print('维度需为 内功 或 战功'); break; }
+    if (!['todo', 'doing', 'done'].includes(status)) { print('状态需为 todo / doing / done'); break; }
+    const quarter = parsed.flags.quarter || currentQuarter();
+    data.goals.push({
+      id: randomUUID(), quarter, dimension: dim, category: parsed.flags.category || '',
+      title, link: parsed.flags.link || '', status, note: parsed.flags.note || '',
+      createdAt: new Date().toISOString(), docs: []
+    });
+    save(data);
+    print('已添加目标：' + title + '（' + dim + ' · ' + quarter + ' · ' + (GOAL_STATUS[status] || status) + '）');
+    break;
+  }
+  case 'goal-status': {
+    const g = resolveGoal(data, args[1], currentQuarter());
+    if (!g) { print('未找到该目标，先 node src/cli.mjs goal-list 看编号/标题'); break; }
+    const s = args[2];
+    if (!['todo', 'doing', 'done'].includes(s)) { print('状态需为 todo / doing / done'); break; }
+    g.status = s;
+    save(data);
+    print('已设状态 ' + (GOAL_STATUS[s] || s) + '：' + g.title);
+    break;
+  }
+  case 'goal-rm': {
+    const g = resolveGoal(data, args[1], currentQuarter());
+    if (!g) { print('未找到该目标'); break; }
+    data.goals = data.goals.filter((x) => x.id !== g.id);
+    save(data);
+    print('已删除目标：' + g.title);
+    break;
+  }
+  case 'learn-add': {
+    const content = args.slice(1).join(' ').trim();
+    if (!content) { print('用法：node src/cli.mjs learn-add "今天学到的内容"'); break; }
+    const learn = loadLearn();
+    learn.entries.unshift({ id: randomUUID(), date: todayStr(), content, createdAt: new Date().toISOString(), updatedAt: null });
+    saveLearn(learn);
+    print('已记录：' + content);
+    break;
+  }
+  case 'learn-list': {
+    const learn = loadLearn();
+    const arg = args[1];
+    let entries = learn.entries || [];
+    if (arg) entries = entries.filter((e) => e.date === arg || e.date.indexOf(arg) === 0);
+    print(formatLearn({ entries }));
     break;
   }
   case 'help':

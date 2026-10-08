@@ -10,6 +10,15 @@
 
 核心针对「一天并行事情太多、忙一件丢一件」：**未完成的任务永远留在列表上并标红拖延天数**；支持四类标签归类；月度日历一眼看清当月节奏。
 
+## 文档导航
+
+| 文档 | 内容 |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 项目结构 + 数据模型 + 数据流 + **红线（绝对不能做的操作）** |
+| [docs/FEATURES.md](docs/FEATURES.md) | 三大模块功能点与规则的完整梳理 |
+| [docs/API.md](docs/API.md) | CLI 全部命令 + HTTP 接口 + 字段/枚举速查 |
+| [SKILL.md](SKILL.md) | **给 AI 看的操作手册**（加待办/改标签/设目标/记学习） |
+
 ## 目录结构
 
 ```text
@@ -76,16 +85,28 @@ node src/cli.mjs tag <编号|id> project=.. nature=.. due=.. prio=..
 node src/cli.mjs sort [priority|due|created|late]
 node src/cli.mjs clear-done
 node src/cli.mjs export
+
+# 目标（中期目标）
+node src/cli.mjs goal-list [YYYY-QN|all]
+node src/cli.mjs goal-add "标题" [--quarter=.. --dimension=内功|战功 --category=.. --link=.. --note=.. --status=todo|doing|done]
+node src/cli.mjs goal-status <id|编号|标题关键词> <todo|doing|done>
+node src/cli.mjs goal-rm   <id|编号|标题关键词>
+
+# 学习（今天学了吗）
+node src/cli.mjs learn-add "内容"
+node src/cli.mjs learn-list [日期]
 ```
 
 `编号` 用 `list` 里显示的 `[n]`（1 起始），也可用完整 id；`project=xx` 与 `--project=xx` 都行。
 
 ## 三、通过对话让 AI 操作
 
-直接对 AI 说人话，AI 会调用上面的 CLI：
+直接对 AI 说人话，AI 会调用上面的 CLI（完整规则见 [SKILL.md](SKILL.md)）：
 
 - 「加个待办：明天发周报，项目架构师Agent，P1」→ `add ... --project=架构师Agent --prio=P1`
 - 「把 maf 迁移那条设截止到 9 月 30 号」→ `tag ... due=2026-09-30`
+- 「加个 Q4 目标：读完《XX》」→ `goal-add ...`
+- 「今天学了 …」→ `learn-add ...`
 - 「这个月 20 号要上什么？」→ 读数据库（`src/store.mjs`），按 `due` 答
 - 「帮我按优先级排一下」→ AI 直接调优先级/顺序
 

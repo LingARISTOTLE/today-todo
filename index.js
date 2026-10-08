@@ -65,6 +65,9 @@
     }
   };
 
+  // 「今天学了吗」首页卡片数据（独立于待办 state，走 /api/learn）
+  var learnState = { entries: [], reviews: {} };
+
   var el = {
     input: $('#input'), dateLabel: $('#dateLabel'), syncLabel: $('#syncLabel'),
     openList: $('#openList'), doneList: $('#doneList'),
@@ -82,7 +85,8 @@
     editPrio: $('#editPrio'), editNature: $('#editNature'), editNatureBtn: $('#editNatureBtn'),
     editGoalBtn: $('#editGoalBtn'), editGoalText: $('#editGoalText'),
     settingsMask: $('#settingsMask'),
-    cfgBase: $('#cfgBase'), cfgKey: $('#cfgKey'), cfgModel: $('#cfgModel')
+    cfgBase: $('#cfgBase'), cfgKey: $('#cfgKey'), cfgModel: $('#cfgModel'),
+    learnMeta: $('#learnMeta'), learnInput: $('#learnInput'), learnSave: $('#learnSave')
   };
 
   /* ---------- utils ---------- */
@@ -181,6 +185,51 @@
     var d = new Date();
     var p = function (n) { return (n < 10 ? '0' : '') + n; };
     el.syncLabel.textContent = '每 5 分钟自动刷新 · 上次 ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+  }
+
+  /* ---------- 今天学了吗（首页卡片） ---------- */
+  function loadLearn() {
+    fetch('/api/learn', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('no'); return r.json(); })
+      .then(function (d) {
+        learnState.entries = Array.isArray(d.entries) ? d.entries : [];
+        learnState.reviews = (d && d.reviews) || {};
+        renderLearnMeta();
+      })
+      .catch(function () {});
+  }
+  function renderLearnMeta() {
+    var set = {};
+    learnState.entries.forEach(function (e) { if (e.date) set[e.date] = true; });
+    var today = todayStr();
+    var todayCount = learnState.entries.filter(function (e) { return e.date === today; }).length;
+    var d = today;
+    if (!set[d]) d = shiftDay(d, -1); // 今天还没写，不算断
+    var streak = 0;
+    while (set[d]) { streak++; d = shiftDay(d, -1); }
+    el.learnMeta.textContent = '连续 ' + streak + ' 天 · 今天已记 ' + todayCount + ' 条';
+  }
+  function addLearnEntry() {
+    var content = el.learnInput.value.trim();
+    if (!content) { toast('写点内容再记录'); return; }
+    // 先拉最新，避免覆盖其它标签页的修改
+    fetch('/api/learn', { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('no'); return r.json(); })
+      .then(function (d) {
+        var entries = Array.isArray(d.entries) ? d.entries : [];
+        var reviews = (d && d.reviews) || {};
+        entries.unshift({ id: uid(), date: todayStr(), content: content, createdAt: new Date().toISOString(), updatedAt: null });
+        return fetch('/api/learn', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entries: entries, reviews: reviews })
+        });
+      })
+      .then(function () {
+        el.learnInput.value = '';
+        return loadLearn();
+      })
+      .then(function () { toast('已记下今天的学习'); })
+      .catch(function () { toast('记录失败'); });
   }
 
   /* ---------- task ops ---------- */
@@ -753,6 +802,12 @@
     $('#themeBtn').addEventListener('click', toggleTheme);
     $('#settingsBtn').addEventListener('click', openSettings);
     $('#clearDoneBtn').addEventListener('click', clearDone);
+
+    el.learnSave.addEventListener('click', addLearnEntry);
+    el.learnInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); addLearnEntry(); }
+    });
+
     $('#settingsCancel').addEventListener('click', closeSettings);
     $('#settingsSave').addEventListener('click', saveSettings);
 
@@ -813,8 +868,9 @@
     }
 
     applyTheme();
-    setInterval(refresh, 5 * 60 * 1000); // 每 5 分钟自动刷新待办
+    setInterval(function () { refresh(); loadLearn(); }, 5 * 60 * 1000); // 每 5 分钟自动刷新
     loadAndRender();
+    loadLearn();
   }
 
   init();

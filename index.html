@@ -57,6 +57,25 @@
     border-radius: 99px; transition: width .5s cubic-bezier(.22, 1, .36, 1);
   }
 
+  /* ---------- 今天学了吗（首页卡片） ---------- */
+  .learn-card {
+    border: 1px solid var(--border); border-radius: 14px; background: var(--card);
+    padding: 12px 14px; margin-top: 16px; box-shadow: var(--shadow-sm);
+    border-left: 3px solid var(--ok);
+  }
+  .learn-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .learn-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .learn-meta { flex: 1; font-size: 12px; color: var(--muted); }
+  .learn-link { font-size: 12px; font-weight: 650; color: var(--accent); text-decoration: none; white-space: nowrap; }
+  .learn-link:hover { text-decoration: underline; }
+  .learn-row { display: flex; gap: 8px; }
+  .learn-row input {
+    flex: 1; border: 1px solid var(--border-strong); border-radius: 9px; background: var(--bg);
+    color: var(--text); font: inherit; font-size: 13px; padding: 7px 10px; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .learn-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
   /* ---------- view tabs ---------- */
   .viewtabs { display: flex; gap: 4px; margin-top: 18px; background: var(--border); padding: 4px; border-radius: 13px; }
   .vtab {
@@ -355,6 +374,18 @@
     <span class="stat" data-filter="done" role="button" tabindex="0" title="只看已完成"><b id="statDoneN">0</b><span>完成</span></span>
   </div>
   <div class="progress"><i id="progressBar"></i></div>
+
+  <div class="learn-card">
+    <div class="learn-head">
+      <span class="learn-title">💡 今天学了吗</span>
+      <span class="learn-meta" id="learnMeta">连续 0 天 · 今天已记 0 条</span>
+      <a class="learn-link" href="/learn">完整记录 / 复盘 →</a>
+    </div>
+    <div class="learn-row">
+      <input type="text" id="learnInput" placeholder="今天学到了什么？一句话总结…" autocomplete="off">
+      <button class="btn small" id="learnSave">记一条</button>
+    </div>
+  </div>
 
   <div class="viewtabs">
     <button class="vtab active" id="tabList" data-view="list">列表</button>

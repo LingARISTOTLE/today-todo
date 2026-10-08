@@ -1,0 +1,32 @@
+README.md
+  h_8bfa60ac84826d 5-8,13-30,33,53,68-78,89
+package.json
+  h_8bfa60ac84826d 6,8-9
+public/goals/goals.html
+  h_8bfa60ac84826d 7-8,99-100
+public/learn/learn.html
+  h_8bfa60ac84826d 7-8,77-78
+public/todo/calendar.js
+  h_8bfa60ac84826d 5-6
+public/todo/index.html
+  h_8bfa60ac84826d 7-8,198-199
+public/todo/index.js
+  h_8bfa60ac84826d 3-4
+src/cli.mjs
+  h_8bfa60ac84826d 3,14,78,85,120,148,236
+src/server.mjs
+  h_8bfa60ac84826d 4,15,134,249,292-295
+src/store.mjs
+  h_8bfa60ac84826d 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b77ee02b796029433bf52abe5680266b74a78296",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

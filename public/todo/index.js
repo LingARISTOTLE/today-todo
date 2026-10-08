@@ -1,7 +1,7 @@
   'use strict';
 
-import { warmHolidays } from './holidays.js';
-import { todayStr, pad, niceDate, dayDiff, shiftDay, weekdayOf, fmtDue, fmtDateCN } from './utils.js';
+import { warmHolidays } from '../shared/holidays.js';
+import { todayStr, pad, niceDate, dayDiff, shiftDay, weekdayOf, fmtDue, fmtDateCN } from '../shared/utils.js';
 import { createCalendar } from './calendar.js';
 
   var STORE_KEY = 'today-todo-v1';

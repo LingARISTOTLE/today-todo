@@ -2,8 +2,8 @@
 
 /* 日历视图：独立成模块，通过工厂注入应用级依赖（state / el / sortUndone / taskHtml） */
 
-import { holidayCache, fetchHolidays } from './holidays.js';
-import { todayStr, pad, shiftDay, weekdayOf, fmtDateCN } from './utils.js';
+import { holidayCache, fetchHolidays } from '../shared/holidays.js';
+import { todayStr, pad, shiftDay, weekdayOf, fmtDateCN } from '../shared/utils.js';
 
 export function createCalendar(deps) {
   var state = deps.state, el = deps.el;

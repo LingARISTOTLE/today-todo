@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // today-todo CLI —— 零依赖，操作项目根目录的 data.json（与网页共用同一份数据）
-// 用法见 `node cli.mjs help`
+// 用法见 `node src/cli.mjs help`
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -11,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PRIO = { 0: 'P0', 1: 'P1', 2: 'P2', 3: 'P3' };
 
 function archiveFile(month) {
-  return join(__dirname, 'data-' + month + '.json');
+  return join(__dirname, '..', 'data-' + month + '.json');
 }
 function dayDiff(a, b) {
   const [y1, m1, d1] = a.split('-').map(Number);
@@ -75,14 +75,14 @@ function formatList(data) {
     lines.push('已完成 (' + done.length + ')');
     done.forEach((t) => lines.push(`  [x] ${t.title}`));
   }
-  if (!undone.length && !done.length) lines.push('  （还没有任何任务，用 node cli.mjs add "..." 加一条）');
+  if (!undone.length && !done.length) lines.push('  （还没有任何任务，用 node src/cli.mjs add "..." 加一条）');
   lines.push('─'.repeat(52));
   return lines.join('\n');
 }
 
 const HELP = `today-todo CLI
 
-用法：node cli.mjs <命令> [参数]
+用法：node src/cli.mjs <命令> [参数]
 
 命令：
   add "标题" ["标题2" ...]     添加一条或多条（默认 P2，截止=今天）
@@ -117,7 +117,7 @@ switch (cmd) {
     if (titles.length === 0 && !process.stdin.isTTY) {
       titles = readFileSync(0, 'utf8').split(/\n+/).map((s) => s.trim()).filter(Boolean);
     }
-    if (titles.length === 0) { print('用法：node cli.mjs add "标题" [--project=..] [--due=..] [--nature=..] [--prio=P0..P3]'); break; }
+    if (titles.length === 0) { print('用法：node src/cli.mjs add "标题" [--project=..] [--due=..] [--nature=..] [--prio=P0..P3]'); break; }
     const prio = parsePrio(parsed.flags.prio);
     if ('prio' in parsed.flags && prio == null) { print('优先级需为 P0/P1/P2/P3（或 0-3）'); break; }
     const project = parsed.flags.project || '';
@@ -145,7 +145,7 @@ switch (cmd) {
   case 'done':
   case 'undo': {
     const t = resolveTarget(data, args[1]);
-    if (!t) { print('未找到该任务，先 node cli.mjs list 看编号或 id'); break; }
+    if (!t) { print('未找到该任务，先 node src/cli.mjs list 看编号或 id'); break; }
     t.done = (cmd === 'done');
     t.doneAt = t.done ? new Date().toISOString() : null;
     save(data);
@@ -233,7 +233,7 @@ switch (cmd) {
   }
   case 'archive': {
     const arg = args[1]; // 可选 YYYY-MM
-    if (arg && !/^\d{4}-\d{2}$/.test(arg)) { print('用法：node cli.mjs archive [YYYY-MM]（月份格式如 2026-09）'); break; }
+    if (arg && !/^\d{4}-\d{2}$/.test(arg)) { print('用法：node src/cli.mjs archive [YYYY-MM]（月份格式如 2026-09）'); break; }
     const today = todayStr();
     const curMonth = today.slice(0, 7);
     const moved = {};

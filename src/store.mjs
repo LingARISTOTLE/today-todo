@@ -14,7 +14,7 @@ process.emitWarning = function (warning, ...args) {
 const { DatabaseSync } = await import('node:sqlite');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-export const DATA_DB = join(__dirname, 'data.db');
+export const DATA_DB = join(__dirname, '..', 'data.db');
 export const DATA_VERSION = 1;
 
 // UI 状态字段（存 meta.ui，任务/目标/设置进专门表）

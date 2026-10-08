@@ -1,7 +1,7 @@
 // today-todo server —— 零依赖本地服务
 // 1) 托管 index.html（网页 UI）
 // 2) 提供 /api/state，让网页与 CLI 共用同一份 data.json
-// 启动：node server.mjs  （默认 http://localhost:3210）
+// 启动：node src/server.mjs  （默认 http://localhost:3210）
 import { createServer } from 'node:http';
 import { readFileSync, existsSync, mkdirSync, writeFileSync, unlinkSync, statSync } from 'node:fs';
 import { execFile } from 'node:child_process';
@@ -12,6 +12,7 @@ import { dirname, join, extname } from 'node:path';
 import { load, save, DATA_DB, getDoc, setDocAudio, loadLearn, saveLearn } from './store.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const PUBLIC_DIR = join(__dirname, '..', 'public');
 const PORT = Number(process.env.PORT) || 3210;
 
 const MIME = {
@@ -130,7 +131,7 @@ async function generateAudio(goalId, ord, voice) {
   if (!text) throw new Error('笔记正文为空');
   const chunks = chunkText(text, 1200);
 
-  const audioDir = join(__dirname, 'audio');
+  const audioDir = join(__dirname, '..', 'audio');
   mkdirSync(audioDir, { recursive: true });
   const base = sanitizeName(goalId) + '__' + ord + '__' + sanitizeName(voice);
   const finalRel = '/audio/' + base + '.mp3';
@@ -245,7 +246,7 @@ const server = createServer((req, res) => {
     }
     const cur = load();
     let arch = [];
-    const fp = join(__dirname, 'data-' + month + '.json');
+    const fp = join(__dirname, '..', 'data-' + month + '.json');
     if (existsSync(fp)) {
       try { arch = JSON.parse(readFileSync(fp, 'utf8')); } catch (e) { arch = []; }
     }
@@ -288,10 +289,10 @@ const server = createServer((req, res) => {
     return;
   }
 
-  // 静态文件
-  const rel = path === '/' ? '/index.html' : (path === '/goals' ? '/goals.html' : (path === '/learn' ? '/learn.html' : path));
-  const fp = join(__dirname, rel);
-  if (!fp.startsWith(__dirname)) { res.writeHead(403); res.end('forbidden'); return; }
+  // 静态文件（前端在 public/ 下，按功能模块分目录）
+  const rel = path === '/' ? '/todo/index.html' : (path === '/goals' ? '/goals/goals.html' : (path === '/learn' ? '/learn/learn.html' : path));
+  const fp = join(PUBLIC_DIR, rel);
+  if (!fp.startsWith(PUBLIC_DIR)) { res.writeHead(403); res.end('forbidden'); return; }
   if (!existsSync(fp)) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('404 not found'); return; }
   res.writeHead(200, { 'Content-Type': MIME[extname(fp).toLowerCase()] || 'application/octet-stream' });
   res.end(readFileSync(fp));

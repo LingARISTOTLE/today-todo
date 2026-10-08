@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "今日待办 —— 单文件网页 + CLI + 本地数据源（零依赖）",
+  "description": "今日待办 + 成长 —— 本地网页 + CLI + SQLite（零依赖）",
   "scripts": {
-    "start": "node server.mjs",
-    "cli": "node cli.mjs"
+    "start": "node src/server.mjs",
+    "cli": "node src/cli.mjs"
   }
 }

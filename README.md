@@ -2,17 +2,35 @@
 
 一个**零依赖**的「今日待办 + 成长」工具，多入口共用同一份本地 SQLite 数据库 `data.db`：
 
-1. **今日待办**（`index.html`）—— 列表 + 月度日历
-2. **中期目标**（`goals.html`）—— 内功（能力）/ 战功（交付）+ 读书笔记朗读
-3. **今天学了吗**（`learn.html`）—— 每日学习日记 + 季度复盘
-4. **CLI**（`cli.mjs`）—— 命令行增删改查
+1. **今日待办**（`public/todo/`）—— 列表 + 月度日历
+2. **中期目标**（`public/goals/`）—— 内功（能力）/ 战功（交付）+ 读书笔记朗读
+3. **今天学了吗**（`public/learn/`）—— 每日学习日记 + 季度复盘
+4. **CLI**（`src/cli.mjs`）—— 命令行增删改查
 5. **AI 助手（我）**—— 直接对话，我帮你加/查/排/打标签
 
 核心针对「一天并行事情太多、忙一件丢一件」：**未完成的任务永远留在列表上并标红拖延天数**；支持四类标签归类；月度日历一眼看清当月节奏。
 
+## 目录结构
+
+```text
+today-todo/
+├── public/              前端（浏览器加载，server 从这里托管）
+│   ├── todo/            今日待办：index.html / index.css / index.js / calendar.js
+│   ├── goals/           中期目标：goals.html / goals.css / goals.js
+│   ├── learn/           今天学了吗：learn.html / learn.css / learn.js
+│   └── shared/          共享：styles.css（设计令牌）/ shared.js（全局）/ utils.js / holidays.js
+├── src/                 后端（Node，零依赖）
+│   ├── server.mjs       HTTP 服务 + 静态托管 + 接口
+│   ├── store.mjs        数据层（SQLite 读写，唯一数据源入口）
+│   └── cli.mjs          命令行工具
+├── data.db              SQLite 数据库（.gitignore）
+├── audio/               TTS 产物（.gitignore）
+└── backups/             迁移/归档备份（.gitignore）
+```
+
 ## 数据存储
 
-单一数据源 = 项目根目录的 `data.db`（SQLite，用 Node 22 内置 `node:sqlite`，零外部依赖；已在 `.gitignore`）。所有读写收敛到 `store.mjs`，任务/目标/设置分表存储、事务写入：
+单一数据源 = 项目根目录的 `data.db`（SQLite，用 Node 22 内置 `node:sqlite`，零外部依赖；已在 `.gitignore`）。所有读写收敛到 `src/store.mjs`，任务/目标/设置分表存储、事务写入：
 
 ```text
 tasks / goals / goal_docs / goal_doc_audio / learn_entries / learn_reviews / meta
@@ -32,7 +50,7 @@ task 逻辑模型 = `{ id, title, priority: 0|1|2|3, project, nature, due, creat
 ## 一、网页 UI
 
 ```bash
-node server.mjs          # 或 npm start
+node src/server.mjs      # 或 npm start
 # 打开 http://localhost:3210
 ```
 
@@ -47,17 +65,17 @@ node server.mjs          # 或 npm start
 ## 二、CLI
 
 ```bash
-node cli.mjs add "标题" --project=架构师Agent --prio=P1 --due=2026-09-30 --nature=交付类
-node cli.mjs list
-node cli.mjs done <编号|id>          # undo / rm 同
-node cli.mjs prio <编号|id> P0..P3
-node cli.mjs project <编号|id> <名称|none>
-node cli.mjs nature  <编号|id> <名称|none>
-node cli.mjs due     <编号|id> [YYYY-MM-DD]   # 缺省=今天
-node cli.mjs tag <编号|id> project=.. nature=.. due=.. prio=..
-node cli.mjs sort [priority|due|created|late]
-node cli.mjs clear-done
-node cli.mjs export
+node src/cli.mjs add "标题" --project=架构师Agent --prio=P1 --due=2026-09-30 --nature=交付类
+node src/cli.mjs list
+node src/cli.mjs done <编号|id>          # undo / rm 同
+node src/cli.mjs prio <编号|id> P0..P3
+node src/cli.mjs project <编号|id> <名称|none>
+node src/cli.mjs nature  <编号|id> <名称|none>
+node src/cli.mjs due     <编号|id> [YYYY-MM-DD]   # 缺省=今天
+node src/cli.mjs tag <编号|id> project=.. nature=.. due=.. prio=..
+node src/cli.mjs sort [priority|due|created|late]
+node src/cli.mjs clear-done
+node src/cli.mjs export
 ```
 
 `编号` 用 `list` 里显示的 `[n]`（1 起始），也可用完整 id；`project=xx` 与 `--project=xx` 都行。
@@ -68,7 +86,7 @@ node cli.mjs export
 
 - 「加个待办：明天发周报，项目架构师Agent，P1」→ `add ... --project=架构师Agent --prio=P1`
 - 「把 maf 迁移那条设截止到 9 月 30 号」→ `tag ... due=2026-09-30`
-- 「这个月 20 号要上什么？」→ 读数据库（`store.mjs`），按 `due` 答
+- 「这个月 20 号要上什么？」→ 读数据库（`src/store.mjs`），按 `due` 答
 - 「帮我按优先级排一下」→ AI 直接调优先级/顺序
 
 > 走这条路不需要任何 API Key（AI 由助手本人完成）。

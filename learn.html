@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>你今天学了吗 · 今日待办</title>
+<title>今天学了吗 · 今日待办</title>
 <link rel="stylesheet" href="styles.css">
 <style>
   .wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 100px; }
@@ -57,35 +57,52 @@
   }
   .tab.active { background: var(--card); color: var(--text); box-shadow: var(--shadow-sm); }
 
-  /* 月历 */
-  .cal-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .cal-title { flex: 1; text-align: center; font-size: 15px; font-weight: 700; }
-  .calnav {
-    border: 0; background: transparent; color: var(--text); width: 32px; height: 32px;
-    border-radius: 9px; cursor: pointer; font-size: 18px; transition: background .15s; flex-shrink: 0;
+  /* 月历（与今日待办样式统一） */
+  .cal-head { display: flex; align-items: center; gap: 8px; margin: 18px 0 14px; }
+  .cal-title { flex: 1; text-align: center; font-size: 17px; font-weight: 750; letter-spacing: -.01em; }
+  .cal-nav {
+    border: 1px solid var(--border); background: var(--card); color: var(--text-2);
+    width: 34px; height: 34px; border-radius: 10px; cursor: pointer; font-size: 18px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center; transition: .15s;
+    box-shadow: var(--shadow-sm); flex-shrink: 0;
   }
-  .calnav:hover { background: var(--border); }
-  .calnav.today { width: auto; padding: 0 10px; font-size: 12px; color: var(--muted); border: 1px solid var(--border); }
-  .calnav.today:hover { color: var(--text); }
-  .cal-dow { text-align: center; font-size: 11px; color: var(--muted); font-weight: 600; padding: 4px 0; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 6px; }
+  .cal-nav:hover { border-color: var(--accent); color: var(--accent); }
+  .btn {
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    border-radius: 10px; padding: 8px 16px; cursor: pointer; font: inherit; font-size: 14px;
+    font-weight: 650; transition: .15s;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.small { padding: 3px 10px; font-size: 12px; border-radius: 8px; }
+  .cal-weekday, .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .cal-weekday span { text-align: center; font-size: 12px; color: var(--muted); padding: 2px 0 6px; font-weight: 650; }
   .cal-cell {
-    position: relative; aspect-ratio: 1; border: 1px solid var(--border); border-radius: 10px;
-    background: var(--card); cursor: pointer; font-size: 13px; color: var(--text);
-    display: flex; align-items: center; justify-content: center; transition: .13s;
+    min-height: 56px; border-radius: 11px; background: var(--card); border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; padding: 7px 2px 5px;
+    cursor: pointer; position: relative; transition: border-color .13s, box-shadow .13s, background .13s;
   }
-  .cal-cell:hover { border-color: var(--border-strong); }
-  .cal-cell.today { border-color: var(--accent); }
-  .cal-cell.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .cal-cell .learn-dot {
-    position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
-    width: 5px; height: 5px; border-radius: 50%; background: var(--ok);
+  .cal-cell:hover { border-color: var(--accent); }
+  .cal-cell.blank { background: transparent; border-color: transparent; cursor: default; }
+  .cal-cell .cal-num { font-size: 14px; font-weight: 650; line-height: 1; }
+  .cal-cell .cal-sub { font-size: 10px; margin-top: 4px; line-height: 1; }
+  .cal-cell.weekend .cal-num, .cal-cell.weekend .cal-sub { color: var(--muted); }
+  .cal-cell.today { box-shadow: inset 0 0 0 2px var(--accent); }
+  .cal-cell.selected { background: var(--accent); border-color: var(--accent); box-shadow: var(--shadow-sm); }
+  .cal-cell.selected .cal-num, .cal-cell.selected .cal-sub { color: #fff; }
+  .cal-cell.selected .cal-badge i { background: #fff; }
+  .cal-cell.selected .cb-done { color: var(--ok); }
+  .cal-badge { display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; }
+  .cal-badge i {
+    font-style: normal; font-size: 10px; font-weight: 800; line-height: 1;
+    min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
   }
-  .cal-cell.selected .learn-dot { background: #fff; }
-  .cal-cell.empty { background: transparent; border-color: transparent; cursor: default; }
-  .cal-cell.empty:hover { border-color: transparent; }
+  .cal-badge .cb-done { background: var(--ok-soft); color: var(--ok); }
+  .cal-legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 14px 4px 0; font-size: 12px; color: var(--muted); }
+  .cal-legend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+  @media (max-width: 480px) { .cal-cell { min-height: 48px; } }
 
-  .day-head { font-size: 14px; font-weight: 700; color: var(--text-2); margin: 14px 0 10px; }
+  .day-head { margin: 20px 6px 12px; font-size: 14px; font-weight: 700; color: var(--text-2); }
   .entry {
     border: 1px solid var(--border); border-radius: 12px; background: var(--card);
     padding: 12px 14px; margin-bottom: 10px; box-shadow: var(--shadow-sm);
@@ -130,7 +147,7 @@
   <header class="topbar">
     <div>
       <a class="back" href="/">← 今日待办</a>
-      <h1>你今天学了吗</h1>
+      <h1>今天学了吗</h1>
       <div class="sub">每天记一点，季度看得到成长</div>
     </div>
     <div class="toolbar">
@@ -161,13 +178,16 @@
 
   <section id="tab-diary">
     <div class="cal-head">
-      <button class="calnav" id="calPrev" title="上一月">‹</button>
+      <button class="cal-nav" id="calPrev" title="上一月">‹</button>
       <div class="cal-title" id="calTitle">—</div>
-      <button class="calnav" id="calNext" title="下一月">›</button>
-      <button class="calnav today" id="calToday">今天</button>
+      <button class="cal-nav" id="calNext" title="下一月">›</button>
+      <button class="btn small" id="calToday">今天</button>
     </div>
-    <div class="cal-grid" id="calDows"></div>
-    <div class="cal-grid" id="calGrid"></div>
+    <div id="calGrid"></div>
+    <div class="cal-legend">
+      <span><i style="background:var(--ok)"></i>已学习</span>
+      <span><i style="background:var(--muted)"></i>周末</span>
+    </div>
 
     <div class="day-head" id="dayHead">—</div>
     <div id="dayEntries"></div>
@@ -175,9 +195,9 @@
 
   <section id="tab-review" hidden>
     <div class="cal-head">
-      <button class="calnav" id="qPrev" title="上一季度">‹</button>
+      <button class="cal-nav" id="qPrev" title="上一季度">‹</button>
       <div class="cal-title" id="qTitle">—</div>
-      <button class="calnav" id="qNext" title="下一季度">›</button>
+      <button class="cal-nav" id="qNext" title="下一季度">›</button>
     </div>
     <div class="review-stats" id="reviewStats"></div>
     <div class="review-box">

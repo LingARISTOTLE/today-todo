@@ -1,6 +1,6 @@
 'use strict';
 
-/* 你今天学了吗 —— 每日学习日记 + 季度复盘 */
+/* 今天学了吗 —— 每日学习日记 + 季度复盘 */
 
 var state = {
   entries: [],            // [{ id, date, content, createdAt, updatedAt }]
@@ -11,8 +11,6 @@ var state = {
   tab: 'diary',
   editingId: null
 };
-
-var DOW = ['日', '一', '二', '三', '四', '五', '六'];
 
 /* ---------- 日期工具 ---------- */
 function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -70,26 +68,41 @@ function renderStreak() {
   $('#streakSub').textContent = learnedDays()[todayStr()] ? '今天已记录，继续保持！' : '今天还没记，写一条吧';
 }
 
-function renderDows() {
-  $('#calDows').innerHTML = DOW.map(function (x) { return '<div class="cal-dow">' + x + '</div>'; }).join('');
-}
-
 function renderCalendar() {
   var y = state.calYear, m = state.calMonth;
-  $('#calTitle').textContent = y + ' 年 ' + (m + 1) + ' 月';
-  var startDow = new Date(y, m, 1).getDay();
-  var daysInMonth = new Date(y, m + 1, 0).getDate();
-  var set = learnedDays();
+  $('#calTitle').textContent = y + '年' + (m + 1) + '月';
+  var first = new Date(Date.UTC(y, m, 1));
+  var startOffset = (first.getUTCDay() + 6) % 7; // 周一开头
+  var daysInMonth = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  var cells = [];
+  for (var i = 0; i < startOffset; i++) cells.push(null);
+  for (var d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
   var today = todayStr();
-  var html = '';
-  for (var i = 0; i < startDow; i++) html += '<div class="cal-cell empty"></div>';
-  for (var d = 1; d <= daysInMonth; d++) {
-    var ds = y + '-' + pad(m + 1) + '-' + pad(d);
-    var cls = 'cal-cell';
-    if (ds === today) cls += ' today';
-    if (ds === state.selectedDay) cls += ' selected';
-    html += '<div class="' + cls + '" data-day="' + ds + '">' + d + (set[ds] ? '<span class="learn-dot"></span>' : '') + '</div>';
-  }
+  var countByDay = {};
+  state.entries.forEach(function (e) { if (e.date) countByDay[e.date] = (countByDay[e.date] || 0) + 1; });
+
+  var html = '<div class="cal-weekday">' + ['一', '二', '三', '四', '五', '六', '日'].map(function (w) { return '<span>' + w + '</span>'; }).join('') + '</div>';
+  html += '<div class="cal-days">';
+  cells.forEach(function (dn) {
+    if (dn === null) { html += '<div class="cal-cell blank"></div>'; return; }
+    var dayStr = y + '-' + pad(m + 1) + '-' + pad(dn);
+    var wd = new Date(Date.UTC(y, m, dn)).getUTCDay();
+    var isWeekend = (wd === 0 || wd === 6);
+    var cls = ['cal-cell'];
+    if (isWeekend) cls.push('weekend');
+    if (dayStr === today) cls.push('today');
+    if (dayStr === state.selectedDay) cls.push('selected');
+    var cnt = countByDay[dayStr] || 0;
+    var badge = cnt
+      ? '<span class="cal-badge" title="已学 ' + cnt + ' 条"><i class="cb-done">' + cnt + '</i></span>'
+      : '';
+    var sub = isWeekend ? '<span class="cal-sub">休</span>' : '';
+    html += '<div class="' + cls.join(' ') + '" data-day="' + dayStr + '">' +
+      '<span class="cal-num">' + dn + '</span>' + sub + badge + '</div>';
+  });
+  html += '</div>';
   $('#calGrid').innerHTML = html;
 }
 
@@ -248,7 +261,6 @@ function init() {
   state.calMonth = d.getMonth();
   state.selectedDay = todayStr();
   state.quarter = currentQuarter();
-  renderDows();
 
   $('#themeBtn').addEventListener('click', toggleTheme);
   $('#quickSave').addEventListener('click', function () {

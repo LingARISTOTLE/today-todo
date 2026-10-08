@@ -227,7 +227,7 @@ export function setDocAudio(goalId, ord, data) {
   ).run(goalId, ord, data.content || '', data.audio || '', data.voice || '', data.fetchedAt || '', data.audioAt || '');
 }
 
-// —— 「你今天学了吗」：每日学习日记 + 季度复盘 ——
+// —— 「今天学了吗」：每日学习日记 + 季度复盘 ——
 export function loadLearn() {
   const entries = db.prepare('SELECT * FROM learn_entries ORDER BY date DESC, rowid DESC').all().map((r) => ({
     id: r.id, date: r.date, content: r.content, createdAt: r.created_at, updatedAt: r.updated_at || null

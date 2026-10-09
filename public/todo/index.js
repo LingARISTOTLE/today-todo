@@ -83,8 +83,11 @@ import { createCalendar } from './calendar.js';
       if (raw) applyState(JSON.parse(raw));
     } catch (e) { state.tasks = []; }
   }
-  function save() {
+  function persistLocal() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  function save() {
+    persistLocal();
     try {
       fetch('/api/state', {
         method: 'POST',
@@ -96,7 +99,7 @@ import { createCalendar } from './calendar.js';
   function loadAndRender() {
     fetch('/api/state', { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('no-server'); return r.json(); })
-      .then(function (d) { applyState(d); })
+      .then(function (d) { applyState(d); persistLocal(); })
       .catch(function () { loadLocal(); })
       .then(function () { calendar.initCalendar(); setView(state.view); warmHolidays(state.calYear); updateSync(); el.input.focus(); });
   }
@@ -105,6 +108,7 @@ import { createCalendar } from './calendar.js';
       .then(function (r) { if (!r.ok) throw new Error('no-server'); return r.json(); })
       .then(function (d) {
         applyState(d);
+        persistLocal();
         render();
         updateSync();
       })
@@ -675,6 +679,9 @@ import { createCalendar } from './calendar.js';
 
     applyTheme();
     setInterval(function () { refresh(); loadLearn(); }, 5 * 60 * 1000); // 每 5 分钟自动刷新
+    // 从 bfcache 恢复 / 切回标签页时重新拉数据，避免页面内导航返回后显示空白
+    window.addEventListener('pageshow', function (e) { if (e.persisted) { refresh(); loadLearn(); } });
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { refresh(); loadLearn(); } });
     loadAndRender();
     loadLearn();
   }

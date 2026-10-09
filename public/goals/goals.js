@@ -438,6 +438,8 @@
     });
 
     applyTheme();
+    window.addEventListener('pageshow', function (e) { if (e.persisted) loadGoals(); });
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') loadGoals(); });
     loadGoals();
   }
   init();

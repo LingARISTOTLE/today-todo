@@ -310,6 +310,8 @@ function init() {
   $('#reviewSave').addEventListener('click', saveReview);
 
   applyTheme();
+  window.addEventListener('pageshow', function (e) { if (e.persisted) loadData(); });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') loadData(); });
   loadData();
 }
 

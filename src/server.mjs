@@ -160,7 +160,7 @@ const server = createServer((req, res) => {
 
   if (path === '/api/state') {
     if (req.method === 'GET') {
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' });
       res.end(JSON.stringify(load()));
     } else if (req.method === 'POST') {
       let body = '';
@@ -186,7 +186,7 @@ const server = createServer((req, res) => {
 
   if (path === '/api/goals') {
     if (req.method === 'GET') {
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' });
       res.end(JSON.stringify({ goals: load().goals || [] }));
     } else if (req.method === 'POST') {
       let body = '';
@@ -213,7 +213,7 @@ const server = createServer((req, res) => {
 
   if (path === '/api/learn') {
     if (req.method === 'GET') {
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' });
       res.end(JSON.stringify(loadLearn()));
     } else if (req.method === 'POST') {
       let body = '';
@@ -260,7 +260,7 @@ const server = createServer((req, res) => {
       seen.add(t.id);
       merged.push(t);
     }
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' });
     res.end(JSON.stringify({ tasks: merged }));
     return;
   }
@@ -278,7 +278,7 @@ const server = createServer((req, res) => {
           const voice = String(d.voice || DEFAULT_VOICE);
           if (!goalId || Number.isNaN(ord)) throw new Error('参数错误');
           const out = await generateAudio(goalId, ord, voice);
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' });
           res.end(JSON.stringify({ ok: true, ...out }));
         } catch (e) {
           res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -294,7 +294,7 @@ const server = createServer((req, res) => {
   const fp = join(PUBLIC_DIR, rel);
   if (!fp.startsWith(PUBLIC_DIR)) { res.writeHead(403); res.end('forbidden'); return; }
   if (!existsSync(fp)) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('404 not found'); return; }
-  res.writeHead(200, { 'Content-Type': MIME[extname(fp).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+  res.writeHead(200, { 'Content-Type': MIME[extname(fp).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' });
   res.end(readFileSync(fp));
 });
 

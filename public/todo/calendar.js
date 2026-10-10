@@ -45,7 +45,7 @@ export function createCalendar(deps) {
       return;
     }
     drawCalendar(); // 先画空，异步回读归档后重画
-    fetch('/api/month?month=' + key, { cache: 'no-store' })
+    fetch('/api/month?month=' + key + '&_t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('no'); return r.json(); })
       .then(function (d) {
         monthCache[key] = (d && Array.isArray(d.tasks)) ? d.tasks : [];

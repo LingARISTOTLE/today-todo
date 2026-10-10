@@ -248,7 +248,7 @@ function toast(msg) {
 
 /* ---------- 加载 + 事件 ---------- */
 function loadData() {
-  fetch('/api/learn').then(function (r) { return r.json(); }).then(function (d) {
+  fetch('/api/learn?_t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
     state.entries = Array.isArray(d.entries) ? d.entries : [];
     state.reviews = (d && d.reviews) || {};
     render();

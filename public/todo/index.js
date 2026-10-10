@@ -97,14 +97,14 @@ import { createCalendar } from './calendar.js';
     } catch (e) {}
   }
   function loadAndRender() {
-    fetch('/api/state', { cache: 'no-store' })
+    fetch('/api/state?_t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('no-server'); return r.json(); })
       .then(function (d) { applyState(d); persistLocal(); })
       .catch(function () { loadLocal(); })
       .then(function () { calendar.initCalendar(); setView(state.view); warmHolidays(state.calYear); updateSync(); el.input.focus(); });
   }
   function refresh() {
-    fetch('/api/state', { cache: 'no-store' })
+    fetch('/api/state?_t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('no-server'); return r.json(); })
       .then(function (d) {
         applyState(d);
@@ -122,7 +122,7 @@ import { createCalendar } from './calendar.js';
 
   /* ---------- 今天学了吗（首页卡片） ---------- */
   function loadLearn() {
-    fetch('/api/learn', { cache: 'no-store' })
+    fetch('/api/learn?_t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('no'); return r.json(); })
       .then(function (d) {
         learnState.entries = Array.isArray(d.entries) ? d.entries : [];
@@ -146,7 +146,7 @@ import { createCalendar } from './calendar.js';
     var content = el.learnInput.value.trim();
     if (!content) { toast('写点内容再记录'); return; }
     // 先拉最新，避免覆盖其它标签页的修改
-    fetch('/api/learn', { cache: 'no-store' })
+    fetch('/api/learn?_t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('no'); return r.json(); })
       .then(function (d) {
         var entries = Array.isArray(d.entries) ? d.entries : [];

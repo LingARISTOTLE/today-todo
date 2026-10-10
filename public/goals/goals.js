@@ -41,7 +41,7 @@
 
   /* ---- data ---- */
   function loadGoals() {
-    fetch('/api/goals', { cache: 'no-store' })
+    fetch('/api/goals?_t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { if (!r.ok) throw new Error('no'); return r.json(); })
       .then(function (d) {
         state.goals = Array.isArray(d.goals) ? d.goals : [];

@@ -80,8 +80,11 @@ import { createCalendar } from './calendar.js';
   function loadLocal() {
     try {
       var raw = localStorage.getItem(STORE_KEY);
-      if (raw) applyState(JSON.parse(raw));
-    } catch (e) { state.tasks = []; }
+      if (!raw) return;
+      var snap = JSON.parse(raw);
+      // 兜底只接受「确实有任务」的快照，防止用旧空快照把实时数据清空
+      if (Array.isArray(snap.tasks) && snap.tasks.length > 0) applyState(snap);
+    } catch (e) { /* 忽略，保持默认空态 */ }
   }
   function persistLocal() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}

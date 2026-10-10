@@ -1,0 +1,20 @@
+public/goals/goals.html
+  h_8bfa60ac84826d 10-11,102-103
+public/learn/learn.html
+  h_8bfa60ac84826d 10-11,80-81
+public/todo/index.html
+  h_8bfa60ac84826d 10-11,201-202
+public/todo/index.js
+  h_8bfa60ac84826d 83-87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c2d8d8788789c3e359ff7363e72c94d8b515ce5a",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

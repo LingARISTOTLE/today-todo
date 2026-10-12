@@ -1,0 +1,14 @@
+README.md
+  h_8bfa60ac84826d 7,29,115,117,129-141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e8f6760a6f7af078d6d69577f4dc3b3606d728ae",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

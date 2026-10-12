@@ -71,6 +71,7 @@ import { createCalendar } from './calendar.js';
     state.tasks = (Array.isArray(d.tasks) ? d.tasks : []).map(normalizeTask);
     monthCache = {}; // 数据刷新后清掉归档缓存，保证回读最新
     state.goals = Array.isArray(d.goals) ? d.goals : [];
+    state.dataVersion = (typeof d.dataVersion === 'number') ? d.dataVersion : 0;
     if (d.settings) {
       Object.assign(state.settings, d.settings);
       if (!Array.isArray(state.settings.projects)) state.settings.projects = ['架构师Agent', 'MAF数据迁移', '稽查虾'];
@@ -96,8 +97,21 @@ import { createCalendar } from './calendar.js';
       fetch('/api/state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.assign({}, state, { deletedIds: deletedIds }))
-      }).then(function (r) { if (r.ok) deletedIds = []; }).catch(function () {});
+        body: JSON.stringify(Object.assign({}, state, { deletedIds: deletedIds, dataVersion: state.dataVersion }))
+      }).then(function (r) {
+        if (r.status === 409) {
+          // 页面数据是旧版本：拉取最新并提示，拒绝覆盖新版本
+          refresh();
+          toast('数据已在别处更新，已刷新，请重试刚才的操作');
+          return;
+        }
+        if (r.ok) {
+          deletedIds = [];
+          r.json().then(function (j) {
+            if (j && typeof j.dataVersion === 'number') state.dataVersion = j.dataVersion;
+          }).catch(function () {});
+        }
+      }).catch(function () {});
     } catch (e) {}
   }
   function loadAndRender() {

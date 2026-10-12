@@ -131,6 +131,12 @@ function metaSet(key, value) {
   db.prepare('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)').run(key, value);
 }
 
+// 数据版本号（乐观锁）：每次 save 递增，前端携带以判断是否过期
+function getDataVersion() {
+  const v = metaGet('dataVersion');
+  return v ? parseInt(v, 10) : 0;
+}
+
 function readTasks() {
   return db.prepare('SELECT * FROM tasks ORDER BY rowid').all().map((r) => ({
     id: r.id, title: r.title, priority: r.priority, project: r.project, nature: r.nature,
@@ -166,6 +172,7 @@ function readGoals() {
 export function load() {
   const d = {
     version: DATA_VERSION,
+    dataVersion: getDataVersion(),
     tasks: readTasks(),
     goals: readGoals(),
     settings: defaultState().settings
@@ -196,6 +203,7 @@ function backupBeforeWrite() {
 export function save(data) {
   const d = normalize(data);
   backupBeforeWrite();
+  const newDataVersion = getDataVersion() + 1;
   db.exec('BEGIN IMMEDIATE');
   try {
     db.exec('DELETE FROM tasks');
@@ -216,6 +224,7 @@ export function save(data) {
     const ui = {};
     for (const k of UI_KEYS) if (d[k] !== undefined && d[k] !== null) ui[k] = d[k];
     metaSet('ui', JSON.stringify(ui));
+    metaSet('dataVersion', String(newDataVersion));
     db.exec('COMMIT');
   } catch (e) {
     db.exec('ROLLBACK');

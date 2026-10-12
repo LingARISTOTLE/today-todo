@@ -170,16 +170,23 @@ const server = createServer((req, res) => {
           const d = JSON.parse(body);
           if (!d || typeof d !== 'object') throw new Error('bad body');
           d.goals = load().goals || []; // 今日待办页面不管理 goals，避免覆盖丢失
-          // 合并任务：保留「本次写入之外」的任务（CLI/其它标签页新增），仅删除前端明确标记的 id，防止旧页面覆盖新数据
           const cur = load();
+          // 版本检查（乐观锁）：页面数据是旧版本时，拒绝覆盖新版本
+          if (typeof d.dataVersion === 'number' && d.dataVersion !== cur.dataVersion) {
+            res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' });
+            res.end(JSON.stringify({ ok: false, stale: true, dataVersion: cur.dataVersion }));
+            return;
+          }
+          // 合并任务：保留「本次写入之外」的任务（CLI/其它标签页新增），仅删除前端明确标记的 id
           const incoming = Array.isArray(d.tasks) ? d.tasks : [];
           const deletedIds = new Set(Array.isArray(d.deletedIds) ? d.deletedIds : []);
           const incomingIds = new Set(incoming.map((t) => (t && t.id)));
           const preserved = (cur.tasks || []).filter((t) => t && !incomingIds.has(t.id) && !deletedIds.has(t.id));
           d.tasks = incoming.concat(preserved);
           save(d);
-          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end('{"ok":true}');
+          const newVersion = load().dataVersion;
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' });
+          res.end(JSON.stringify({ ok: true, dataVersion: newVersion }));
         } catch (e) {
           res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end('{"ok":false}');

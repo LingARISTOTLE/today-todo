@@ -303,6 +303,13 @@ const server = createServer((req, res) => {
     return;
   }
 
+  // 「今天学了吗」已合并进首页，旧 /learn 页面重定向到首页（/api/learn 数据接口仍保留）
+  if (path === '/learn' || path === '/learn/') {
+    res.writeHead(302, { Location: '/' });
+    res.end();
+    return;
+  }
+
   // 静态文件（前端在 public/ 下，按功能模块分目录）
   const rel = path === '/' ? '/todo/index.html' : (path === '/goals' ? '/goals/goals.html' : (path === '/learn' ? '/learn/learn.html' : path));
   const fp = join(PUBLIC_DIR, rel);

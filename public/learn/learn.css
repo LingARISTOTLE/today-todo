@@ -116,10 +116,10 @@
 
   /* 季度复盘 */
   .review-stats { display: flex; gap: 10px; margin-bottom: 16px; }
-  .stat { flex: 1; text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 8px; }
-  .stat .n { font-size: 24px; font-weight: 800; color: var(--accent); line-height: 1; }
-  .stat .l { font-size: 11px; color: var(--muted); margin-top: 5px; }
-  .stat.warn .n { color: var(--danger); }
+  .review-stats .stat { flex: 1; text-align: center; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 8px; }
+  .review-stats .stat .n { font-size: 24px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .review-stats .stat .l { font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .review-stats .stat.warn .n { color: var(--danger); }
   .review-box { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
   .review-box .btn-primary { align-self: flex-end; }
   .review-group { margin-bottom: 14px; }

@@ -24,8 +24,10 @@ import { createCalendar } from './calendar.js';
     }
   };
 
-  // 「今天学了吗」首页卡片数据（独立于待办 state，走 /api/learn）
+  // 「今天学了吗」数据（独立于待办 state，走 /api/learn）
   var learnState = { entries: [], reviews: {} };
+  // 学习视图状态
+  var lrn = { calYear: 0, calMonth: 0, selectedDay: '', quarter: '', tab: 'diary', editingId: null };
 
   var el = {
     input: $('#input'), dateLabel: $('#dateLabel'), syncLabel: $('#syncLabel'),
@@ -34,8 +36,8 @@ import { createCalendar } from './calendar.js';
     statOpenN: $('#statOpenN'), statTodayN: $('#statTodayN'),
     statLateN: $('#statLateN'), statDoneN: $('#statDoneN'),
     progressBar: $('#progressBar'), toast: $('#toast'),
-    viewList: $('#viewList'), viewCal: $('#viewCal'),
-    tabList: $('#tabList'), tabCal: $('#tabCal'),
+    viewList: $('#viewList'), viewCal: $('#viewCal'), viewLearn: $('#viewLearn'),
+    tabList: $('#tabList'), tabCal: $('#tabCal'), tabLearn: $('#tabLearn'),
     calTitle: $('#calTitle'), calGrid: $('#calGrid'),
     calDayHead: $('#calDayHead'), calDayList: $('#calDayList'),
     editMask: $('#editMask'),
@@ -145,7 +147,10 @@ import { createCalendar } from './calendar.js';
       .then(function (d) {
         learnState.entries = Array.isArray(d.entries) ? d.entries : [];
         learnState.reviews = (d && d.reviews) || {};
+        if (!lrn.quarter) lrn.quarter = lrnCurrentQuarter();
+        if (!lrn.calYear) { var n = new Date(); lrn.calYear = n.getFullYear(); lrn.calMonth = n.getMonth(); lrn.selectedDay = todayStr(); }
         renderLearnMeta();
+        lrnRender();
       })
       .catch(function () {});
   }
@@ -181,6 +186,208 @@ import { createCalendar } from './calendar.js';
       })
       .then(function () { toast('已记下今天的学习'); })
       .catch(function () { toast('记录失败'); });
+  }
+
+  /* ---------- 学习视图（合并自 /learn） ---------- */
+  function lrnDays() {
+    var set = {};
+    learnState.entries.forEach(function (e) { if (e.date) set[e.date] = true; });
+    return set;
+  }
+  function lrnStreak() {
+    var set = lrnDays();
+    var d = todayStr();
+    if (!set[d]) d = shiftDay(d, -1); // 今天还没写，不算断
+    var n = 0;
+    while (set[d]) { n++; d = shiftDay(d, -1); }
+    return n;
+  }
+  function lrnDayEntries(day) {
+    return learnState.entries.filter(function (e) { return e.date === day; });
+  }
+  function lrnParseDay(s) { var p = s.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+  function lrnDaysInclusive(a, b) { return Math.round((lrnParseDay(b) - lrnParseDay(a)) / 86400000) + 1; }
+  function lrnCurrentQuarter() {
+    var d = new Date();
+    return d.getFullYear() + '-Q' + Math.ceil((d.getMonth() + 1) / 3);
+  }
+  function lrnShiftQuarter(q, delta) {
+    var m = /^(\d{4})-Q([1-4])$/.exec(q);
+    if (!m) return lrnCurrentQuarter();
+    var idx = (+m[1]) * 4 + (+m[2] - 1) + delta;
+    return Math.floor(idx / 4) + '-Q' + (idx % 4 + 1);
+  }
+  function lrnQuarterRange(q) {
+    var m = /^(\d{4})-Q([1-4])$/.exec(q);
+    var y = +m[1], qn = +m[2];
+    var sm = (qn - 1) * 3 + 1, em = sm + 2;
+    return { start: y + '-' + pad(sm) + '-01', end: y + '-' + pad(em) + '-' + pad(new Date(y, em, 0).getDate()) };
+  }
+
+  function lrnRenderCalendar() {
+    var y = lrn.calYear, m = lrn.calMonth;
+    $('#lrnCalTitle').textContent = y + '年' + (m + 1) + '月';
+    var first = new Date(Date.UTC(y, m, 1));
+    var startOffset = (first.getUTCDay() + 6) % 7; // 周一开头
+    var dim = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    var cells = [];
+    for (var i = 0; i < startOffset; i++) cells.push(null);
+    for (var d = 1; d <= dim; d++) cells.push(d);
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    var today = todayStr();
+    var countByDay = {};
+    learnState.entries.forEach(function (e) { if (e.date) countByDay[e.date] = (countByDay[e.date] || 0) + 1; });
+
+    var html = '<div class="cal-weekday">' + ['一', '二', '三', '四', '五', '六', '日'].map(function (w) { return '<span>' + w + '</span>'; }).join('') + '</div>';
+    html += '<div class="cal-days">';
+    cells.forEach(function (dn) {
+      if (dn === null) { html += '<div class="cal-cell blank"></div>'; return; }
+      var dayStr = y + '-' + pad(m + 1) + '-' + pad(dn);
+      var wd = new Date(Date.UTC(y, m, dn)).getUTCDay();
+      var isWeekend = (wd === 0 || wd === 6);
+      var cls = ['cal-cell'];
+      if (isWeekend) cls.push('weekend');
+      if (dayStr === today) cls.push('today');
+      if (dayStr === lrn.selectedDay) cls.push('selected');
+      var cnt = countByDay[dayStr] || 0;
+      var badge = cnt ? '<span class="cal-badge" title="已学 ' + cnt + ' 条"><i class="cb-done">' + cnt + '</i></span>' : '';
+      var sub = isWeekend ? '<span class="cal-sub">休</span>' : '';
+      html += '<div class="' + cls.join(' ') + '" data-day="' + dayStr + '">' +
+        '<span class="cal-num">' + dn + '</span>' + sub + badge + '</div>';
+    });
+    html += '</div>';
+    $('#lrnCalGrid').innerHTML = html;
+  }
+
+  function lrnEntryHtml(e) {
+    if (lrn.editingId === e.id) {
+      return '<div class="entry editing" data-id="' + esc(e.id) + '">' +
+        '<textarea class="e-edit">' + esc(e.content) + '</textarea>' +
+        '<div class="e-acts"><button data-act="save">保存</button><button data-act="cancel">取消</button></div></div>';
+    }
+    var meta = '';
+    if (e.createdAt) meta += '记于 ' + (e.createdAt.slice(11, 16) || '');
+    if (e.updatedAt) meta += ' · 改于 ' + e.updatedAt.slice(11, 16);
+    return '<div class="entry" data-id="' + esc(e.id) + '">' +
+      (meta ? '<div class="e-meta">' + esc(meta) + '</div>' : '') +
+      '<div class="e-content">' + esc(e.content) + '</div>' +
+      '<div class="e-acts"><button data-act="edit">编辑</button><button data-act="del" class="del">删除</button></div></div>';
+  }
+
+  function lrnRenderDay() {
+    var day = lrn.selectedDay;
+    var list = lrnDayEntries(day);
+    $('#lrnDayHead').textContent = day + ' · 共 ' + list.length + ' 条';
+    $('#lrnDayEntries').innerHTML = list.length ? list.map(lrnEntryHtml).join('') : '<div class="empty-hint">这一天还没有记录</div>';
+  }
+
+  function lrnRenderReview() {
+    var q = lrn.quarter;
+    $('#lrnQTitle').textContent = q;
+    var range = lrnQuarterRange(q);
+    var today = todayStr();
+    var effEnd = today < range.end ? today : range.end;
+    var elapsed = today >= range.start ? lrnDaysInclusive(range.start, effEnd) : 0;
+    var set = lrnDays();
+    var written = 0;
+    Object.keys(set).forEach(function (d) { if (d >= range.start && d <= effEnd) written++; });
+    var missed = Math.max(0, elapsed - written);
+    $('#lrnReviewStats').innerHTML =
+      '<div class="stat"><div class="n">' + written + '</div><div class="l">已学习天数</div></div>' +
+      '<div class="stat"><div class="n">' + elapsed + '</div><div class="l">已过天数</div></div>' +
+      '<div class="stat warn"><div class="n">' + missed + '</div><div class="l">未学习天数</div></div>';
+    var reviewEl = $('#lrnReviewInput');
+    if (document.activeElement !== reviewEl) reviewEl.value = learnState.reviews[q] || '';
+    var groups = {};
+    learnState.entries.forEach(function (e) {
+      if (e.date >= range.start && e.date <= range.end) {
+        groups[e.date] = groups[e.date] || [];
+        groups[e.date].push(e);
+      }
+    });
+    var dates = Object.keys(groups).sort().reverse();
+    var html = '';
+    if (!dates.length) {
+      html = '<div class="empty-hint">这个季度还没有记录</div>';
+    } else {
+      dates.forEach(function (d) {
+        html += '<div class="review-day">' + d + '</div>';
+        groups[d].forEach(function (e) {
+          html += '<div class="entry"><div class="e-content">' + esc(e.content) + '</div></div>';
+        });
+      });
+    }
+    $('#lrnReviewList').innerHTML = html;
+  }
+
+  function lrnRender() {
+    $('#lrnStreakNum').textContent = lrnStreak();
+    $('#lrnStreakSub').textContent = lrnDays()[todayStr()] ? '今天已记录，继续保持！' : '今天还没记，写一条吧';
+    $('#lrnTabDiary').hidden = lrn.tab !== 'diary';
+    $('#lrnTabReview').hidden = lrn.tab !== 'review';
+    Array.prototype.forEach.call($('#lrnTabs').querySelectorAll('.tab'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-tab') === lrn.tab);
+    });
+    if (lrn.tab === 'diary') { lrnRenderCalendar(); lrnRenderDay(); }
+    else lrnRenderReview();
+  }
+
+  function lrnSaveData(cb) {
+    fetch('/api/learn', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entries: learnState.entries, reviews: learnState.reviews })
+    }).then(function () { if (cb) cb(); }).catch(function () { toast('保存失败'); });
+  }
+
+  function lrnAddEntry(content) {
+    content = (content || '').trim();
+    if (!content) { toast('写点内容再记录'); return; }
+    learnState.entries.unshift({ id: uid(), date: todayStr(), content: content, createdAt: new Date().toISOString(), updatedAt: null });
+    lrn.selectedDay = todayStr();
+    lrnSaveData(function () { lrnRender(); renderLearnMeta(); toast('已记下今天的学习'); });
+  }
+
+  function lrnSetTab(t) {
+    lrn.tab = t === 'review' ? 'review' : 'diary';
+    if (lrn.tab === 'review' && !lrn.quarter) lrn.quarter = lrnCurrentQuarter();
+    lrnRender();
+  }
+
+  function lrnShiftMonth(delta) {
+    lrn.calMonth += delta;
+    if (lrn.calMonth < 0) { lrn.calMonth = 11; lrn.calYear--; }
+    else if (lrn.calMonth > 11) { lrn.calMonth = 0; lrn.calYear++; }
+    lrnRender();
+  }
+
+  function lrnStartEdit(id) {
+    lrn.editingId = id;
+    lrnRenderDay();
+    var ta = document.querySelector('#lrnDayEntries textarea.e-edit');
+    if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+  }
+  function lrnCancelEdit() { lrn.editingId = null; lrnRenderDay(); }
+  function lrnSaveEdit(id, val) {
+    val = (val || '').trim();
+    var e = learnState.entries.find(function (x) { return x.id === id; });
+    if (!e) return;
+    if (!val) { lrnDelEntry(id); return; }
+    e.content = val; e.updatedAt = new Date().toISOString();
+    lrn.editingId = null;
+    lrnSaveData(function () { lrnRender(); renderLearnMeta(); });
+  }
+  function lrnDelEntry(id) {
+    learnState.entries = learnState.entries.filter(function (x) { return x.id !== id; });
+    lrn.editingId = null;
+    lrnSaveData(function () { lrnRender(); renderLearnMeta(); });
+  }
+  function lrnSaveReview() {
+    var v = $('#lrnReviewInput').value.trim();
+    if (!v) { toast('写点内容再保存'); return; }
+    learnState.reviews[lrn.quarter] = v;
+    lrnSaveData(function () { lrnRenderReview(); toast('季度总结已保存'); });
   }
 
   /* ---------- task ops ---------- */
@@ -470,8 +677,11 @@ import { createCalendar } from './calendar.js';
     state.view = v;
     el.tabList.classList.toggle('active', v === 'list');
     el.tabCal.classList.toggle('active', v === 'cal');
+    el.tabLearn.classList.toggle('active', v === 'learn');
     el.viewList.style.display = v === 'list' ? '' : 'none';
     el.viewCal.style.display = v === 'cal' ? '' : 'none';
+    el.viewLearn.style.display = v === 'learn' ? '' : 'none';
+    if (v === 'learn') loadLearn();
     render();
   }
 
@@ -600,6 +810,7 @@ import { createCalendar } from './calendar.js';
 
     el.tabList.addEventListener('click', function () { setView('list'); });
     el.tabCal.addEventListener('click', function () { state.filter = 'all'; setView('cal'); });
+    el.tabLearn.addEventListener('click', function () { setView('learn'); });
 
     $('.stats').addEventListener('click', function (e) {
       var s = e.target.closest('.stat');
@@ -637,6 +848,49 @@ import { createCalendar } from './calendar.js';
     el.learnInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); addLearnEntry(); }
     });
+
+    // 学习视图入口
+    $('#learnNavBtn').addEventListener('click', function () { setView('learn'); });
+    $('#learnGo').addEventListener('click', function (e) { e.preventDefault(); setView('learn'); });
+
+    // 学习视图交互
+    $('#lrnQuickSave').addEventListener('click', function () {
+      lrnAddEntry($('#lrnQuickInput').value);
+      $('#lrnQuickInput').value = '';
+    });
+    $('#lrnQuickInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $('#lrnQuickSave').click(); }
+    });
+    $('#lrnTabs').addEventListener('click', function (e) {
+      var b = e.target.closest('.tab');
+      if (!b) return;
+      lrnSetTab(b.getAttribute('data-tab'));
+    });
+    $('#lrnCalPrev').addEventListener('click', function () { lrnShiftMonth(-1); });
+    $('#lrnCalNext').addEventListener('click', function () { lrnShiftMonth(1); });
+    $('#lrnCalToday').addEventListener('click', function () {
+      var d = new Date(); lrn.calYear = d.getFullYear(); lrn.calMonth = d.getMonth();
+      lrn.selectedDay = todayStr(); lrnRender();
+    });
+    $('#lrnCalGrid').addEventListener('click', function (e) {
+      var cell = e.target.closest('.cal-cell');
+      if (!cell || !cell.getAttribute('data-day')) return;
+      lrn.selectedDay = cell.getAttribute('data-day');
+      lrnRender();
+    });
+    $('#lrnDayEntries').addEventListener('click', function (e) {
+      var entry = e.target.closest('.entry');
+      if (!entry) return;
+      var id = entry.getAttribute('data-id');
+      var act = e.target.getAttribute('data-act');
+      if (act === 'edit') lrnStartEdit(id);
+      else if (act === 'del') lrnDelEntry(id);
+      else if (act === 'save') lrnSaveEdit(id, entry.querySelector('.e-edit').value);
+      else if (act === 'cancel') lrnCancelEdit();
+    });
+    $('#lrnQPrev').addEventListener('click', function () { lrn.quarter = lrnShiftQuarter(lrn.quarter, -1); lrnRender(); });
+    $('#lrnQNext').addEventListener('click', function () { lrn.quarter = lrnShiftQuarter(lrn.quarter, 1); lrnRender(); });
+    $('#lrnReviewSave').addEventListener('click', lrnSaveReview);
 
     $('#settingsCancel').addEventListener('click', closeSettings);
     $('#settingsSave').addEventListener('click', saveSettings);

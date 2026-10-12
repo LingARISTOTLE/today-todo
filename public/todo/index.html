@@ -7,8 +7,9 @@
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 <title>今日待办</title>
-  <link rel="stylesheet" href="/shared/styles.css?v=8">
-  <link rel="stylesheet" href="/todo/index.css?v=8">
+  <link rel="stylesheet" href="/shared/styles.css?v=9">
+  <link rel="stylesheet" href="/todo/index.css?v=9">
+  <link rel="stylesheet" href="/learn/learn.css?v=9">
 </head>
 <body>
 <div class="wrap">
@@ -22,9 +23,9 @@
       <a class="icon-btn" href="/goals" title="中期目标（内功 / 战功）" aria-label="中期目标">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
       </a>
-      <a class="icon-btn" href="/learn" title="今天学了吗" aria-label="今天学了吗">
+      <button class="icon-btn" id="learnNavBtn" title="今天学了吗（学习）" aria-label="今天学了吗">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 00-4 12.7c.6.5 1 1.3 1 2.1V18h6v-1.2c0-.8.4-1.6 1-2.1A7 7 0 0012 2z"/></svg>
-      </a>
+      </button>
       <button class="icon-btn" id="sortBtn" title="切换排序" aria-label="切换排序">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l4-4 4 4"/><path d="M8 17l4 4 4-4"/><path d="M12 3v18"/></svg>
       </button>
@@ -56,7 +57,7 @@
     <div class="learn-head">
       <span class="learn-title">💡 今天学了吗</span>
       <span class="learn-meta" id="learnMeta">连续 0 天 · 今天已记 0 条</span>
-      <a class="learn-link" href="/learn">完整记录 / 复盘 →</a>
+      <a class="learn-link" href="#" id="learnGo">完整记录 / 复盘 →</a>
     </div>
     <div class="learn-row">
       <input type="text" id="learnInput" placeholder="今天学到了什么？一句话总结…" autocomplete="off">
@@ -67,6 +68,7 @@
   <div class="viewtabs">
     <button class="vtab active" id="tabList" data-view="list">列表</button>
     <button class="vtab" id="tabCal" data-view="cal">日历</button>
+    <button class="vtab" id="tabLearn" data-view="learn">学习</button>
   </div>
 
   <!-- 列表视图 -->
@@ -106,6 +108,53 @@
     </div>
     <div class="cal-day-head" id="calDayHead"></div>
     <div class="list" id="calDayList"></div>
+  </div>
+
+  <!-- 学习视图（合并自 /learn） -->
+  <div id="viewLearn" style="display:none">
+    <div class="streak-card">
+      <div class="streak-num" id="lrnStreakNum">0</div>
+      <div class="streak-col">
+        <div class="streak-label">连续学习天数</div>
+        <div class="streak-sub" id="lrnStreakSub">今天还没记，写一条吧</div>
+      </div>
+    </div>
+    <div class="quick-add">
+      <textarea id="lrnQuickInput" class="big" rows="3" placeholder="今天学到了什么？一句话总结也行…"></textarea>
+      <button class="btn-primary" id="lrnQuickSave">记下今天</button>
+    </div>
+    <div class="tabs" id="lrnTabs">
+      <button class="tab active" data-tab="diary">日记</button>
+      <button class="tab" data-tab="review">季度复盘</button>
+    </div>
+    <section id="lrnTabDiary">
+      <div class="cal-head">
+        <button class="cal-nav" id="lrnCalPrev" title="上一月">‹</button>
+        <div class="cal-title" id="lrnCalTitle">—</div>
+        <button class="cal-nav" id="lrnCalNext" title="下一月">›</button>
+        <button class="btn small" id="lrnCalToday">今天</button>
+      </div>
+      <div id="lrnCalGrid"></div>
+      <div class="cal-legend">
+        <span><i style="background:var(--ok)"></i>已学习</span>
+        <span><i style="background:var(--muted)"></i>周末</span>
+      </div>
+      <div class="day-head" id="lrnDayHead">—</div>
+      <div id="lrnDayEntries"></div>
+    </section>
+    <section id="lrnTabReview" hidden>
+      <div class="cal-head">
+        <button class="cal-nav" id="lrnQPrev" title="上一季度">‹</button>
+        <div class="cal-title" id="lrnQTitle">—</div>
+        <button class="cal-nav" id="lrnQNext" title="下一季度">›</button>
+      </div>
+      <div class="review-stats" id="lrnReviewStats"></div>
+      <div class="review-box">
+        <textarea id="lrnReviewInput" class="big" rows="4" placeholder="这个季度你学到了什么？有没有浪费时间？…"></textarea>
+        <button class="btn-primary" id="lrnReviewSave">保存季度总结</button>
+      </div>
+      <div id="lrnReviewList"></div>
+    </section>
   </div>
 </div>
 
@@ -198,7 +247,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="/shared/shared.js?v=8"></script>
-<script type="module" src="/todo/index.js?v=8"></script>
+<script src="/shared/shared.js?v=9"></script>
+<script type="module" src="/todo/index.js?v=9"></script>
 </body>
 </html>

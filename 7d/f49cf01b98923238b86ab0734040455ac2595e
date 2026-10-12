@@ -1,0 +1,14 @@
+src/server.mjs
+  h_8bfa60ac84826d 314
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7df49cf01b98923238b86ab0734040455ac2595e",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

@@ -4,7 +4,7 @@
 
 1. **今日待办**（`public/todo/`）—— 列表 + 月度日历
 2. **中期目标**（`public/goals/`）—— 内功（能力）/ 战功（交付）+ 读书笔记朗读
-3. **今天学了吗**（`public/learn/`）—— 每日学习日记 + 季度复盘
+3. **今天学了吗**（今日待办首页「学习」标签）—— 每日学习日记 + 季度复盘
 4. **CLI**（`src/cli.mjs`）—— 命令行增删改查
 5. **AI 助手（我）**—— 直接对话，我帮你加/查/排/打标签
 
@@ -26,7 +26,7 @@ today-todo/
 ├── public/              前端（浏览器加载，server 从这里托管）
 │   ├── todo/            今日待办：index.html / index.css / index.js / calendar.js
 │   ├── goals/           中期目标：goals.html / goals.css / goals.js
-│   ├── learn/           今天学了吗：learn.html / learn.css / learn.js
+│   ├── learn/           学习视图样式：learn.css（学习功能已并入 todo）
 │   └── shared/          共享：styles.css（设计令牌）/ shared.js（全局）/ utils.js / holidays.js
 ├── src/                 后端（Node，零依赖）
 │   ├── server.mjs       HTTP 服务 + 静态托管 + 接口
@@ -112,9 +112,9 @@ node src/cli.mjs learn-list [日期]
 
 > 走这条路不需要任何 API Key（AI 由助手本人完成）。
 
-## 四、今天学了吗
+## 四、今天学了吗（学习）
 
-两个入口：**今日待办首页的内嵌卡片**（速记 + 连续天数），或独立页 http://localhost:3210/learn（完整编辑 + 复盘）：
+入口在**今日待办首页**：顶部「列表 / 日历 / 学习」标签里的「学习」标签，完整包含速记、学习日历、季度复盘；首页另有一张「今天学了吗」摘要卡片（速记 + 连续天数）。旧的独立页 `/learn` 已重定向回首页：
 
 - **速记**：每天写一段「今天学到了什么」，可一天多条。
 - **日历打卡**：月历里哪天写了会亮一个绿点，空白 = 没记录。
@@ -126,3 +126,16 @@ node src/cli.mjs learn-list [日期]
 ## 关于「AI 排优先级」按钮（网页顶栏 ✨）
 
 网页里的 ✨ 是可选的、需要你自己配 API Key（浏览器内直接调模型）。主要通过对话用 AI 的话，忽略它即可。
+
+## 五、安装为 DSH 技能（可选）
+
+把 [SKILL.md](SKILL.md) 安装成 DeepSeek Harness 的正式技能，让任意会话里的 AI 都能按统一规范操作本项目：
+
+```bash
+node scripts/dsh-skill.mjs install     # 安装到 ~/.agents/skills/today-todo/（全局可用）
+node scripts/dsh-skill.mjs uninstall   # 卸载
+node scripts/dsh-skill.mjs status      # 查看安装状态
+node scripts/dsh-skill.mjs install --scope=project   # 装到 <项目>/.dsh/skills/（仅项目工作区可见）
+```
+
+脚本会自动补上 DSH 要求的 frontmatter（kebab-case `name` + `description`）并拷贝 `docs/`；DSH 热发现、无需重启。

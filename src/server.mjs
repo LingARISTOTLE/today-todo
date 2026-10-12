@@ -170,6 +170,13 @@ const server = createServer((req, res) => {
           const d = JSON.parse(body);
           if (!d || typeof d !== 'object') throw new Error('bad body');
           d.goals = load().goals || []; // 今日待办页面不管理 goals，避免覆盖丢失
+          // 合并任务：保留「本次写入之外」的任务（CLI/其它标签页新增），仅删除前端明确标记的 id，防止旧页面覆盖新数据
+          const cur = load();
+          const incoming = Array.isArray(d.tasks) ? d.tasks : [];
+          const deletedIds = new Set(Array.isArray(d.deletedIds) ? d.deletedIds : []);
+          const incomingIds = new Set(incoming.map((t) => (t && t.id)));
+          const preserved = (cur.tasks || []).filter((t) => t && !incomingIds.has(t.id) && !deletedIds.has(t.id));
+          d.tasks = incoming.concat(preserved);
           save(d);
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end('{"ok":true}');

@@ -89,14 +89,15 @@ import { createCalendar } from './calendar.js';
   function persistLocal() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
   }
+  var deletedIds = []; // 本页删除过的任务 id，随保存提交给服务器做合并，防止旧页面覆盖 CLI 新增任务
   function save() {
     persistLocal();
     try {
       fetch('/api/state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(state)
-      }).catch(function () {});
+        body: JSON.stringify(Object.assign({}, state, { deletedIds: deletedIds }))
+      }).then(function (r) { if (r.ok) deletedIds = []; }).catch(function () {});
     } catch (e) {}
   }
   function loadAndRender() {
@@ -221,6 +222,7 @@ import { createCalendar } from './calendar.js';
   }
   function removeTask(id) {
     state.tasks = state.tasks.filter(function (x) { return x.id !== id; });
+    deletedIds.push(id);
     save(); render();
   }
   function updateTitle(id, title) {
@@ -232,6 +234,7 @@ import { createCalendar } from './calendar.js';
     save(); render();
   }
   function clearDone() {
+    state.tasks.filter(function (x) { return x.done; }).forEach(function (t) { deletedIds.push(t.id); });
     state.tasks = state.tasks.filter(function (x) { return !x.done; });
     save(); render();
   }

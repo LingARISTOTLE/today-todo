@@ -311,7 +311,7 @@ const server = createServer((req, res) => {
   }
 
   // 静态文件（前端在 public/ 下，按功能模块分目录）
-  const rel = path === '/' ? '/todo/index.html' : (path === '/goals' ? '/goals/goals.html' : (path === '/learn' ? '/learn/learn.html' : path));
+  const rel = path === '/' ? '/todo/index.html' : (path === '/goals' ? '/goals/goals.html' : path);
   const fp = join(PUBLIC_DIR, rel);
   if (!fp.startsWith(PUBLIC_DIR)) { res.writeHead(403); res.end('forbidden'); return; }
   if (!existsSync(fp)) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('404 not found'); return; }

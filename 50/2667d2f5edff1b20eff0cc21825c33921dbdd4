@@ -1,0 +1,24 @@
+public/goals/goals.html
+  h_8bfa60ac84826d 10-11,102-103
+public/learn/learn.html
+  h_8bfa60ac84826d 10-11,80-81
+public/todo/index.html
+  h_8bfa60ac84826d 10-11,201-202
+public/todo/index.js
+  h_8bfa60ac84826d 74,100-114
+src/server.mjs
+  h_8bfa60ac84826d 174-180,187-189
+src/store.mjs
+  h_8bfa60ac84826d 134-139,175,206,227
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "502667d2f5edff1b20eff0cc21825c33921dbdd4",
+  "prompts": {},
+  "humans": {
+    "h_8bfa60ac84826d": {
+      "author": "ling <yangling9@xiaomi.com>"
+    }
+  }
+}

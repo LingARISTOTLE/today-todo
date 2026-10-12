@@ -1,6 +1,6 @@
   'use strict';
 
-import { warmHolidays } from '../shared/holidays.js';
+import { warmHolidays, holidayCache, fetchHolidays } from '../shared/holidays.js';
 import { todayStr, pad, niceDate, dayDiff, shiftDay, weekdayOf, fmtDue, fmtDateCN } from '../shared/utils.js';
 import { createCalendar } from './calendar.js';
 
@@ -227,6 +227,7 @@ import { createCalendar } from './calendar.js';
   function lrnRenderCalendar() {
     var y = lrn.calYear, m = lrn.calMonth;
     $('#lrnCalTitle').textContent = y + '年' + (m + 1) + '月';
+    var hd = holidayCache[y] || { holidays: {}, workdays: {} };
     var first = new Date(Date.UTC(y, m, 1));
     var startOffset = (first.getUTCDay() + 6) % 7; // 周一开头
     var dim = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
@@ -244,20 +245,32 @@ import { createCalendar } from './calendar.js';
     cells.forEach(function (dn) {
       if (dn === null) { html += '<div class="cal-cell blank"></div>'; return; }
       var dayStr = y + '-' + pad(m + 1) + '-' + pad(dn);
-      var wd = new Date(Date.UTC(y, m, dn)).getUTCDay();
+      var wd = weekdayOf(dayStr);
       var isWeekend = (wd === 0 || wd === 6);
+      var hName = hd.holidays[dayStr];
+      var isMakeup = hd.workdays[dayStr];
       var cls = ['cal-cell'];
-      if (isWeekend) cls.push('weekend');
+      if (hName) cls.push('holiday');
+      else if (isMakeup) cls.push('makeup');
+      else if (isWeekend) cls.push('weekend');
       if (dayStr === today) cls.push('today');
       if (dayStr === lrn.selectedDay) cls.push('selected');
       var cnt = countByDay[dayStr] || 0;
       var badge = cnt ? '<span class="cal-badge" title="已学 ' + cnt + ' 条"><i class="cb-done">' + cnt + '</i></span>' : '';
-      var sub = isWeekend ? '<span class="cal-sub">休</span>' : '';
+      var sub = '';
+      if (hName) sub = (hd.holidays[shiftDay(dayStr, -1)] === hName) ? '休' : hName;
+      else if (isMakeup) sub = '班';
+      else if (isWeekend) sub = '休';
       html += '<div class="' + cls.join(' ') + '" data-day="' + dayStr + '">' +
-        '<span class="cal-num">' + dn + '</span>' + sub + badge + '</div>';
+        '<span class="cal-num">' + dn + '</span>' +
+        (sub ? '<span class="cal-sub">' + sub + '</span>' : '') + badge + '</div>';
     });
     html += '</div>';
     $('#lrnCalGrid').innerHTML = html;
+    // 该年节假日数据还没拉取时，异步补拉后重渲染
+    if (!holidayCache[y]) {
+      fetchHolidays(y).then(function () { if (state.view === 'learn' && lrn.calYear === y) lrnRender(); });
+    }
   }
 
   function lrnEntryHtml(e) {
